@@ -1,4 +1,4 @@
-쎈player 0.1.0
+쎈player 0.2.0
 
 PySide6 / Shiboken6 / Qt 6.10.2 — The Qt Company Ltd. and contributors.
 Used under LGPL-3.0. Qt libraries remain separate, dynamically loaded DLLs.
@@ -30,3 +30,31 @@ Ghanachocolate font — Lotte. See assets/Ghanachocolate-NOTICE.txt.
 Licenses included by the packaging tools are retained in the application bundle.
 Users may replace compatible LGPL shared libraries for debugging modifications.
 No restriction on reverse engineering for that purpose is imposed by this app.
+
+
+Qt WebEngine 6.10.2 embeds Chromium and its third-party components.
+Their license notices are accessible in the engine at chrome://credits.
+Source: https://download.qt.io/archive/qt/6.10/6.10.2/submodules/
+
+python-adblock 0.6.0 (MIT) binds Brave adblock-rust (MPL-2.0).
+https://github.com/ArniDagur/python-adblock
+https://github.com/brave/adblock-rust
+Only our small filter list is bundled, not Brave Browser or full EasyList.
+
+imageio-ffmpeg 0.6.0 wrapper (BSD-2-Clause) includes the separate
+FFmpeg 7.1 essentials GPL executable for encoding/export, run as a subprocess.
+This is distinct from the LGPL Qt decoding DLLs above.
+https://github.com/imageio/imageio-ffmpeg/tree/v0.6.0
+https://www.gyan.dev/ffmpeg/builds/ (binary build provider)
+https://github.com/FFmpeg/FFmpeg/tree/n7.1 (matching upstream source)
+
+PyAudioWPatch 0.2.12.8 and PortAudio (MIT).
+https://github.com/s0d3s/PyAudioWPatch
+
+yt-dlp 2026.8.19 (Unlicense), yt-dlp-ejs 0.8.0 (Unlicense AND MIT AND ISC,
+including astring and meriyah in its wheel).
+https://github.com/yt-dlp/yt-dlp/tree/2026.08.19
+https://github.com/yt-dlp/ejs/tree/0.8.0
+QuickJS-NG 0.17.0 (MIT), bundled upstream Windows x86_64 qjs.exe.
+https://github.com/quickjs-ng/quickjs/releases/tag/v0.17.0
+SHA256: 2AEABF0092C3262D6B2609824418F7DD7ED1F1DF939F73B2B15645230CAC0D77

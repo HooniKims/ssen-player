@@ -1,0 +1,9 @@
+! SsenPlayer targeted network rules. Engine: Brave adblock-rust via python-adblock.
+! These rules do not guarantee removal of YouTube in-stream advertising.
+||doubleclick.net^
+||googlesyndication.com^
+||googleadservices.com^
+||youtube.com/pagead/
+||youtube.com/api/stats/ads
+||youtube.com/ptracking
+||youtube.com/get_midroll_info

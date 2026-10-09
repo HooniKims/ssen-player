@@ -5,12 +5,13 @@ from PySide6.QtCore import Qt, QUrl, QTimer, QSettings, QStandardPaths, Signal, 
 from PySide6.QtGui import QDesktopServices, QShortcut, QKeySequence
 from PySide6.QtWidgets import (QMainWindow, QWidget, QFrame, QVBoxLayout, QHBoxLayout, QPushButton,
     QLabel, QFileDialog, QSlider, QComboBox, QButtonGroup, QGridLayout, QDialog, QCheckBox,
-    QListWidget, QScrollArea, QSizePolicy)
+    QListWidget, QScrollArea, QSizePolicy, QStackedWidget, QMessageBox)
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from .canvas import Canvas
 from .ink import Ink
 from .subtitles import read_subtitles
 from . import VERSION
+from .classroom import ClassroomFeatures
 
 MEDIA_FILTER = '동영상 (*.mov *.mp4 *.mkv *.avi *.webm *.m4v *.wmv *.flv *.ts *.mts *.m2ts *.mpg *.mpeg *.3gp);;오디오 (*.mp3 *.flac *.wav *.m4a *.ogg);;모든 파일 (*)'
 
@@ -49,7 +50,7 @@ class SaveCapture(QRunnable):
             self.signals.done.emit('', str(error))
 
 
-class Player(QMainWindow):
+class Player(ClassroomFeatures, QMainWindow):
     def __init__(self, settings=None):
         super().__init__()
         self.setWindowTitle('쎈player')
@@ -60,6 +61,9 @@ class Player(QMainWindow):
         self.capture_dir = self.settings.value('capture_dir', default)
         self.mode = 'window'
         self.current = None
+        self.source_kind = 'local'
+        self.youtube = None
+        self.segment_dialog = None
         self.queue = []
         self.inks = {}
         self.subtitles = []
@@ -77,8 +81,9 @@ class Player(QMainWindow):
         self.canvas.togglePlayback.connect(self.toggle)
         self.canvas.fullscreenRequested.connect(self.cycle_fullscreen)
         self._build()
+        self.setup_extensions()
         self.media.positionChanged.connect(self.position)
-        self.media.durationChanged.connect(lambda n: self.seek.setRange(0, max(1, n)))
+        self.media.durationChanged.connect(lambda n: self.seek.setRange(0, max(1, n)) if self.source_kind == 'local' else None)
         self.media.playbackStateChanged.connect(self.playback_state)
         self.media.errorOccurred.connect(lambda _, message: self.notify('재생 오류: ' + message))
         self.media.mediaStatusChanged.connect(self.media_status)
@@ -118,7 +123,9 @@ class Player(QMainWindow):
         self.queue_list.itemDoubleClicked.connect(lambda item: self.load(self.queue[self.queue_list.row(item)]))
         self.queue_list.hide()
         self.middle.addWidget(self.queue_list)
-        self.middle.addWidget(self.canvas, 1)
+        self.video_stack = QStackedWidget()
+        self.video_stack.addWidget(self.canvas)
+        self.middle.addWidget(self.video_stack, 1)
         self.tools_scroll = QFrame(objectName='tools')
         self.tools_scroll.setFixedWidth(156)
         panel_layout = QVBoxLayout(self.tools_scroll)
@@ -188,7 +195,7 @@ class Player(QMainWindow):
         self.seek = QSlider(Qt.Horizontal)
         self.seek.setRange(0, 1)
         self.seek.setMinimumHeight(28)
-        self.seek.sliderReleased.connect(lambda: self.media.setPosition(self.seek.value()))
+        self.seek.sliderReleased.connect(lambda: self.seek_to(self.seek.value()))
         track.addWidget(self.time)
         track.addWidget(self.seek, 1)
         foot.addLayout(track)
@@ -205,9 +212,9 @@ class Player(QMainWindow):
         self.speed.addItems(['0.5×', '0.75×', '1.0×', '1.25×', '1.5×', '2.0×'])
         self.speed.setCurrentIndex(2)
         self.speed.setToolTip('재생 속도')
-        self.speed.currentIndexChanged.connect(lambda i: self.media.setPlaybackRate([.5, .75, 1, 1.25, 1.5, 2][i]))
+        self.speed.currentIndexChanged.connect(lambda i: self.set_speed([.5, .75, 1, 1.25, 1.5, 2][i]))
         controls.addWidget(self.speed)
-        self.ab_button = button('A–B 반복', self.ab_repeat)
+        self.ab_button = button('여기부터', self.ab_repeat, tip='시작 장면에서 여기부터 → 끝 장면에서 여기까지')
         controls.addWidget(self.ab_button)
         self.loop_button = button('한 편 반복', self.toggle_loop)
         self.loop_button.setCheckable(True)
@@ -220,7 +227,7 @@ class Player(QMainWindow):
         self.volume.setFixedWidth(95)
         self.volume.setValue(round(self.audio.volume()*100))
         self.volume.setToolTip('음량')
-        self.volume.valueChanged.connect(lambda v: self.audio.setVolume(v/100))
+        self.volume.valueChanged.connect(self.set_volume)
         controls.addWidget(self.volume)
         foot.addLayout(controls)
         self.layout.addWidget(self.footer)
@@ -259,8 +266,12 @@ class Player(QMainWindow):
             self.notify('파일을 찾을 수 없습니다: ' + path)
             return
         self.save_position()
+        if self.segment_dialog: self.segment_dialog.close()
         if self.current:
             self.inks[self.current] = self.canvas.ink
+        if self.youtube: self.youtube.command('pause')
+        self.source_kind = 'local'
+        self.video_stack.setCurrentWidget(self.canvas)
         self.current = path
         self.canvas.ink = self.inks.get(path, Ink())
         self.canvas.loaded = True
@@ -268,7 +279,7 @@ class Player(QMainWindow):
         self.subtitles = []
         self.subtitle_delay = 0
         self.a = self.b = None
-        self.ab_button.setText('A–B 반복')
+        self.ab_button.setText('여기부터')
         self.filename.setText(Path(path).name)
         self.filename.setToolTip(path)
         self.setWindowTitle(Path(path).name + ' · 쎈player')
@@ -292,7 +303,7 @@ class Player(QMainWindow):
         except (ValueError, TypeError): return {}
 
     def save_position(self):
-        if self.current and self.media.duration() > 0:
+        if self.source_kind == 'local' and self.current and self.media.duration() > 0:
             positions = self._positions()
             positions.pop(self.current, None)
             position = self.media.position()
@@ -300,6 +311,9 @@ class Player(QMainWindow):
             self.settings.setValue('positions', json.dumps(dict(list(positions.items())[-100:])))
 
     def toggle(self):
+        if self.source_kind == 'youtube':
+            self.youtube.command('toggle')
+            return
         if not self.current:
             self.open_files()
         elif self.media.playbackState() == QMediaPlayer.PlayingState:
@@ -308,22 +322,25 @@ class Player(QMainWindow):
             self.media.play()
 
     def playback_state(self, state):
+        if self.source_kind != 'local': return
         self.play_button.setText('일시 정지' if state == QMediaPlayer.PlayingState else '재생')
 
     def media_status(self, state):
+        if self.source_kind != 'local': return
         if state == QMediaPlayer.LoadedMedia:
             if 0 < self.pending_resume < self.media.duration()-3000:
                 self.media.setPosition(self.pending_resume)
             self.pending_resume = 0
             self.notify('재생 중에도 펜으로 쓸 수 있습니다. 캡처에는 영상과 필기가 함께 저장됩니다.')
         elif state == QMediaPlayer.EndOfMedia:
-            if self.loop:
-                self.media.setPosition(0)
+            if self.loop or (self.a is not None and self.b is not None):
+                self.media.setPosition(self.a if self.a is not None and self.b is not None else 0)
                 self.media.play()
             else:
                 self.next_file(1, wrap=False)
 
     def position(self, value):
+        if self.source_kind != 'local': return
         if not self.seek.isSliderDown(): self.seek.setValue(value)
         self.time.setText(f'{stamp(value)} / {stamp(self.media.duration())}')
         if self.b is not None and value >= self.b:
@@ -341,7 +358,7 @@ class Player(QMainWindow):
             self.canvas.viewport().update()
 
     def jump(self, delta):
-        self.media.setPosition(max(0, min(self.media.duration(), self.media.position()+delta)))
+        self.seek_to(max(0, min(self.current_duration(), self.current_position()+delta)))
 
     def next_file(self, delta, wrap=True):
         if not self.queue or self.current not in self.queue: return
@@ -355,27 +372,28 @@ class Player(QMainWindow):
     def choose_tool(self, name):
         self.canvas.set_tool(name)
         self.tool_buttons[name].setChecked(True)
+        if self.youtube: self.youtube.sync_tool()
 
     def undo(self):
         self.canvas.ink.undo()
-        self.canvas.viewport().update()
+        self.refresh_ink()
 
     def redo(self):
         self.canvas.ink.redo()
-        self.canvas.viewport().update()
+        self.refresh_ink()
 
     def clear_ink(self):
         self.canvas.ink.clear()
-        self.canvas.viewport().update()
+        self.refresh_ink()
         self.notify('필기를 지웠습니다. 되돌리기 버튼으로 복원할 수 있습니다.')
 
     def capture(self):
         try:
-            image = self.canvas.capture()
-            name = Path(self.current).stem if self.current else '수업'
+            image = self.capture_image()
+            name = ('YouTube_'+self.youtube.identifier) if self.source_kind == 'youtube' else (Path(self.current).stem if self.current else '수업')
             for char in '<>:"/\\|?*': name = name.replace(char, '_')
             name = name[:65]
-            filename = f'{name}_{stamp(self.media.position()).replace(":", "-")}_{datetime.now():%Y%m%d_%H%M%S_%f}.png'
+            filename = f'{name}_{stamp(self.current_position()).replace(":", "-")}_{datetime.now():%Y%m%d_%H%M%S_%f}.png'
             job = SaveCapture(image, Path(self.capture_dir)/filename)
             self.jobs.add(job)
             job.signals.done.connect(lambda path, error, j=job: self.capture_done(j, path, error))
@@ -398,24 +416,23 @@ class Player(QMainWindow):
     def ab_repeat(self):
         if not self.current: return
         if self.a is None:
-            self.a = self.media.position()
-            self.ab_button.setText('B 지점 지정')
+            self.a = self.current_position()
+            self.ab_button.setText('여기까지')
+            self.notify(f'시작 지점 {stamp(self.a)} 지정 · 끝 장면에서 여기까지를 눌러주세요.')
         elif self.b is None:
-            if self.media.position() <= self.a+500:
+            if self.current_position() <= self.a+500:
                 self.notify('B 지점은 A 지점보다 0.5초 이상 뒤에 지정해 주세요.')
                 return
-            self.b = self.media.position()
-            self.ab_button.setText('반복 해제')
-            self.media.setPosition(self.a)
+            self.apply_loop(self.a,self.current_position())
         else:
-            self.a = self.b = None
-            self.ab_button.setText('A–B 반복')
+            self.clear_loop()
 
     def toggle_loop(self):
         self.loop = self.loop_button.isChecked()
 
     def toggle_mute(self):
         self.audio.setMuted(not self.audio.isMuted())
+        if self.source_kind == 'youtube': self.youtube.command('mute',self.audio.isMuted())
         self.mute_button.setText('소리 켜기' if self.audio.isMuted() else '음소거')
 
     def cycle_fullscreen(self):
@@ -545,6 +562,14 @@ class Player(QMainWindow):
         event.acceptProposedAction()
 
     def closeEvent(self, event):
+        if self.recorder.active or self.recorder.finalizing:
+            self.close_after_recording = True
+            self.recorder.stop()
+            self.notify('녹화를 저장한 뒤 종료합니다…')
+            event.ignore()
+            return
+        if self.segment_dialog: self.segment_dialog.close()
+        if self.youtube: self.youtube.shutdown()
         self.save_position()
         self.settings.setValue('volume', self.audio.volume())
         self.settings.sync()

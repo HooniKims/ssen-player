@@ -21,9 +21,9 @@
 ```powershell
 .venv/Scripts/python.exe scripts/sign_release.py `
   --key '<저장소 밖 개인키.pem>' `
-  --installer artifacts/SsenPlayer-Setup-0.1.0.exe `
-  --url 'https://배포호스트/SsenPlayer-Setup-0.1.0.exe' `
-  --version 0.1.0 --output artifacts/update.json
+  --installer artifacts/SsenPlayer-Setup-0.2.0.exe `
+  --url 'https://배포호스트/SsenPlayer-Setup-0.2.0.exe' `
+  --version 0.2.0 --output artifacts/update.json
 ```
 
 4. 생성된 매니페스트를 `feed_url` 주소에 배포합니다. 버전, URL, 파일 크기, SHA-256 모두 서명에 포함됩니다.

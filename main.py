@@ -8,9 +8,11 @@ STARTED = time.perf_counter()
 
 def main():
     from PySide6.QtWidgets import QApplication
+    from PySide6.QtCore import Qt
     from PySide6.QtGui import QFontDatabase, QIcon
     from app.player import Player
     from app.style import STYLE
+    QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
     application = QApplication(sys.argv)
     application.setApplicationName('SsenPlayer')
     application.setOrganizationName('HooniKim')
@@ -23,6 +25,11 @@ def main():
     window.show()
     args = list(sys.argv[1:])
     diagnostics = None
+    features = None
+    if '--feature-test-output' in args:
+        index = args.index('--feature-test-output')
+        features = args[index+1]
+        del args[index:index+2]
     if '--smoke-test-output' in args:
         index = args.index('--smoke-test-output')
         diagnostics = args[index+1]
@@ -32,6 +39,9 @@ def main():
     if diagnostics:
         from app.diagnostics import run
         run(application, window, Path(diagnostics), STARTED)
+    if features:
+        from app.feature_diagnostics import run
+        run(application, window, Path(features))
     return application.exec()
 
 if __name__ == '__main__':

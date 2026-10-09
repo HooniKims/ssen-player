@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>html,body,#player{margin:0;width:100%;height:100%;overflow:hidden;background:#111d19;color:white}#hint{position:absolute;inset:0;display:grid;place-items:center;font:16px sans-serif}</style></head>
+<body><div id="hint">YouTube 영상을 불러오는 중입니다…</div><div id="player"></div>
+<script>
+let player, loop=null;
+window.ssenState={ready:false,error:null};
+function onYouTubeIframeAPIReady(){
+ const id=new URLSearchParams(location.search).get('v');
+ if(!/^[a-zA-Z0-9_-]{11}$/.test(id)){window.ssenState.error='잘못된 영상 ID';return;}
+ player=new YT.Player('player',{videoId:id,width:'100%',height:'100%',
+  playerVars:{autoplay:1,playsinline:1,rel:0,fs:0,origin:location.origin},
+  events:{onReady:()=>{document.getElementById('hint').remove();window.ssenState.ready=true;player.playVideo()},
+   onError:e=>{window.ssenState.error=e.data},onStateChange:e=>{window.ssenState.state=e.data}}});
+}
+window.ssenCommand=(name,args)=>{
+ if(!player||!window.ssenState.ready)return;
+ if(name==='play')player.playVideo();
+ if(name==='pause')player.pauseVideo();
+ if(name==='toggle')player.getPlayerState()===1?player.pauseVideo():player.playVideo();
+ if(name==='seek')player.seekTo(args[0],true);
+ if(name==='volume')player.setVolume(args[0]);
+ if(name==='mute')args[0]?player.mute():player.unMute();
+ if(name==='speed')player.setPlaybackRate(args[0]);
+ if(name==='loop'){loop=args[0];if(loop){player.seekTo(loop[0],true);player.playVideo();}}
+};
+setInterval(()=>{
+ if(!player||!window.ssenState.ready)return;
+ const t=player.getCurrentTime(),state=player.getPlayerState();
+ window.ssenState={...window.ssenState,time:t,duration:player.getDuration(),state,title:player.getVideoData().title};
+ if(loop&&((state===1&&(t>=loop[1]||t<loop[0]-.5))||state===0)){player.seekTo(loop[0],true);if(state===0)player.playVideo();}
+},100);
+const api=document.createElement('script');api.src='https://www.youtube.com/iframe_api';
+api.onerror=()=>{window.ssenState.error='인터넷 연결을 확인해 주세요';document.getElementById('hint').textContent=window.ssenState.error;};
+document.head.appendChild(api);
+setTimeout(()=>{if(!window.ssenState.ready&&!window.ssenState.error){window.ssenState.error='YouTube 연결 시간이 초과되었습니다';document.getElementById('hint').textContent='인터넷 연결을 확인하고 다시 열어주세요.'}},30000);
+</script></body></html>
