@@ -1,0 +1,32 @@
+쎈player 0.1.0
+
+PySide6 / Shiboken6 / Qt 6.10.2 — The Qt Company Ltd. and contributors.
+Used under LGPL-3.0. Qt libraries remain separate, dynamically loaded DLLs.
+https://www.qt.io/licensing/open-source-lgpl-obligations
+https://code.qt.io/cgit/pyside/pyside-setup.git/tag/?h=v6.10.2
+https://download.qt.io/archive/qt/6.10/6.10.2/submodules/
+
+FFmpeg 7.1.2 — FFmpeg contributors. The LGPL FFmpeg shared libraries delivered
+with PySide6 are bundled. The development-machine ffmpeg.exe is NOT shipped.
+https://ffmpeg.org/legal.html
+https://code.qt.io/cgit/qt/qtmultimedia.git/tree/src/3rdparty?h=v6.10.2
+Matching upstream source: https://github.com/FFmpeg/FFmpeg/tree/n7.1.2
+Binary build configuration reported by avutil-59.dll:
+--prefix=/c/FFmpeg-n7.1.2/build/msvc/installed --disable-programs --disable-doc
+--disable-debug --enable-network --disable-lzma --enable-pic --disable-vulkan
+--disable-v4l2-m2m --disable-decoder=truemotion1 --enable-zlib
+--extra-cflags=-IC:/zlib-1.3.1/build/amd64
+--extra-ldflags=-LIBPATH:C:/zlib-1.3.1/build/amd64
+--toolchain=msvc --enable-shared --disable-static
+
+cryptography — Python Cryptographic Authority and contributors.
+Apache-2.0 OR BSD-3-Clause. https://github.com/pyca/cryptography
+Python — Python Software Foundation License. https://www.python.org/psf/license/
+PyInstaller bootloader — GPL-2.0-or-later with bootloader exception.
+https://pyinstaller.org/en/stable/license.html
+
+Ghanachocolate font — Lotte. See assets/Ghanachocolate-NOTICE.txt.
+
+Licenses included by the packaging tools are retained in the application bundle.
+Users may replace compatible LGPL shared libraries for debugging modifications.
+No restriction on reverse engineering for that purpose is imposed by this app.

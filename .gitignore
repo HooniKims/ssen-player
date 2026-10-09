@@ -1,0 +1,12 @@
+.venv/
+.references/
+__pycache__/
+*.pyc
+dist/
+build/output/
+build/*.png
+artifacts/
+.tools/
+*.pem
+*.key
+
