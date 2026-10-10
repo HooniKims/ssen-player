@@ -8,7 +8,7 @@ import tempfile
 import shutil
 from datetime import datetime
 from pathlib import Path
-from PySide6.QtCore import QObject, Signal, QTimer, Qt
+from PySide6.QtCore import QObject, Signal, QTimer, Qt, QSize
 from PySide6.QtGui import QImage
 from .media_tools import ffmpeg, process_options, run_ffmpeg
 
@@ -67,11 +67,11 @@ class Recorder(QObject):
     def start(self, folder, system_audio=True, microphone=False, width=1280, height=720, fps=20):
         if self.active or self.finalizing:
             raise RuntimeError('이미 녹화 중이거나 저장 중입니다.')
-        first = self.capture()  # Validate before creating files or opening audio devices.
+        self.width, self.height, self.fps = width, height, fps
+        first = self.bytes(self.capture(width, height))  # Validate before creating files or opening audio devices.
         Path(folder).mkdir(parents=True, exist_ok=True)
         self.output = Path(folder)/f'수업녹화_{datetime.now():%Y%m%d_%H%M%S_%f}.mp4'
         self.workspace = Path(tempfile.mkdtemp(prefix='.ssen-recording-', dir=folder))
-        self.width, self.height, self.fps = width, height, fps
         self.frames = queue.Queue(maxsize=2)
         self.stop_event = threading.Event()
         self.tracks = []
@@ -89,7 +89,7 @@ class Recorder(QObject):
                     self.tracks.append(AudioTrack(device, self.workspace/'mic.wav', self.pa))
             self.log = open(self.workspace/'encoder.log', 'wb')
             self.child = subprocess.Popen([ffmpeg(), '-hide_banner', '-loglevel', 'error', '-y',
-                '-f', 'rawvideo', '-pixel_format', 'rgba', '-video_size', f'{width}x{height}',
+                '-f', 'rawvideo', '-pixel_format', 'bgra', '-video_size', f'{width}x{height}',
                 '-framerate', str(fps), '-i', 'pipe:0', '-an', '-c:v', 'libx264',
                 '-preset', 'ultrafast', '-crf', '23', '-pix_fmt', 'yuv420p',
                 str(self.workspace/'video.mkv')], stdin=subprocess.PIPE,
@@ -97,7 +97,7 @@ class Recorder(QObject):
             self.started = time.monotonic()
             for track in self.tracks: track.start()
             self.active = True
-            self.frames.put(self.bytes(first))
+            self.frames.put(first)
             self.thread = threading.Thread(target=self.encode, daemon=True)
             self.thread.start()
             self.timer.start(round(1000/fps))
@@ -114,14 +114,15 @@ class Recorder(QObject):
             raise
 
     def bytes(self, image):
-        scaled = image.scaled(self.width, self.height, Qt.IgnoreAspectRatio, Qt.FastTransformation)
-        rgba = scaled.convertToFormat(QImage.Format_RGBA8888)
-        return bytes(rgba.constBits())
+        # Sources paint at the recording size; RGB32 is BGRA in memory on Windows (little-endian).
+        if image.size() != QSize(self.width, self.height):
+            image = image.scaled(self.width, self.height, Qt.IgnoreAspectRatio, Qt.FastTransformation)
+        return bytes(image.convertToFormat(QImage.Format_RGB32).constBits())
 
     def frame(self):
         if not self.active: return
         try:
-            if not self.frames.full(): self.frames.put_nowait(self.bytes(self.capture()))
+            if not self.frames.full(): self.frames.put_nowait(self.bytes(self.capture(self.width, self.height)))
             self.elapsed.emit(int(time.monotonic()-self.started))
         except Exception as error:
             self.warning.emit('녹화 프레임 오류: '+str(error))

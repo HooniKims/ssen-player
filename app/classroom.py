@@ -8,6 +8,8 @@ from PySide6.QtWidgets import (QDialog,QVBoxLayout,QHBoxLayout,QLabel,QPushButto
 from .ink import Ink
 from .controls import button
 
+SPEEDS = [.5, .75, 1, 1.25, 1.5, 2]
+
 
 class ClassroomFeatures:
     def setup_extensions(self):
@@ -28,8 +30,9 @@ class ClassroomFeatures:
     def make_button(text, callback):
         return button(text, callback)
 
-    def capture_image(self):
-        return self.youtube.capture() if self.source_kind == 'youtube' else self.canvas.capture()
+    def capture_image(self, width=1920, height=1080):
+        source = self.youtube if self.source_kind == 'youtube' else self.canvas
+        return source.capture(width, height)
 
     def current_position(self):
         return round(self.youtube.state.get('time',0)*1000) if self.source_kind == 'youtube' else self.media.position()
@@ -40,6 +43,14 @@ class ClassroomFeatures:
     def seek_to(self, value):
         if self.source_kind == 'youtube': self.youtube.command('seek', value/1000)
         else: self.media.setPosition(value)
+
+    def resume_playback(self):
+        if self.source_kind == 'youtube': self.youtube.command('play')
+        else: self.media.play()
+
+    def pause_playback(self):
+        if self.source_kind == 'youtube': self.youtube.command('pause')
+        else: self.media.pause()
 
     def set_speed(self, speed):
         if self.source_kind == 'youtube': self.youtube.command('speed', speed)
@@ -88,6 +99,7 @@ class ClassroomFeatures:
         from .youtube_url import video_id
         identifier = video_id(identifier)
         if self.segment_dialog: self.segment_dialog.close()
+        self.cancel_countdown()
         self.save_position()
         self.media.pause()
         if self.current: self.inks[self.current] = self.canvas.ink
@@ -119,7 +131,7 @@ class ClassroomFeatures:
             self.youtube_initialized = True
             self.youtube.command('volume', round(self.audio.volume()*100))
             self.youtube.command('mute', self.audio.isMuted())
-            self.youtube.command('speed', [.5, .75, 1, 1.25, 1.5, 2][self.speed.currentIndex()])
+            self.youtube.command('speed', SPEEDS[self.speed.currentIndex()])
         from .player import stamp
         duration = self.current_duration()
         position = self.current_position()

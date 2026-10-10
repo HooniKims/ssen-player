@@ -46,7 +46,7 @@ class Canvas(QGraphicsView):
         self.ink = Ink()
         self.tool = 'pointer'
         self.color = '#ffdf59'
-        self.width = 6
+        self.pen_width = 6
         self.eraser_radius = 24
         self.erase_last = None
         self.drawing = False
@@ -94,17 +94,17 @@ class Canvas(QGraphicsView):
         painter.drawText(rect, flags, self.subtitle)
         painter.restore()
 
-    def begin(self, point):
+    def stroke_begin(self, point):
         if self.tool == 'pointer' or not self.sceneRect().contains(point):
             return
         self.drawing = True
         self.erase_last = point
         self.ink.checkpoint()
         if self.tool not in ('eraser', 'area_eraser'):
-            self.ink.strokes.append(Stroke(self.color, self.width * (4 if self.tool == 'marker' else 1), self.tool == 'marker'))
-        self.move(point)
+            self.ink.strokes.append(Stroke(self.color, self.pen_width * (4 if self.tool == 'marker' else 1), self.tool == 'marker'))
+        self.stroke_move(point)
 
-    def move(self, point):
+    def stroke_move(self, point):
         if not self.drawing:
             return
         point = QPointF(max(0, min(WIDTH, point.x())), max(0, min(HEIGHT, point.y())))
@@ -118,23 +118,29 @@ class Canvas(QGraphicsView):
         self.viewport().update()
         self.inkChanged.emit()
 
+    def stroke_end(self, point=None):
+        if not self.drawing:
+            return
+        if point is not None:
+            self.stroke_move(point)
+        self.drawing = False
+        self.ink.commit()
+
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             if self.tool == 'pointer':
                 self.togglePlayback.emit()
             else:
-                self.begin(self.mapToScene(event.position().toPoint()))
+                self.stroke_begin(self.mapToScene(event.position().toPoint()))
             event.accept()
         else:
             super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
-        self.move(self.mapToScene(event.position().toPoint()))
+        self.stroke_move(self.mapToScene(event.position().toPoint()))
 
     def mouseReleaseEvent(self, event):
-        if self.drawing:
-            self.move(self.mapToScene(event.position().toPoint()))
-        self.drawing = False
+        self.stroke_end(self.mapToScene(event.position().toPoint()))
         event.accept()
 
     def mouseDoubleClickEvent(self, event):
@@ -150,36 +156,38 @@ class Canvas(QGraphicsView):
                 if points:
                     point = self.mapToScene(points[0].position().toPoint())
                     if kind == QEvent.TouchBegin:
-                        self.begin(point)
+                        self.stroke_begin(point)
                     elif kind == QEvent.TouchUpdate:
-                        self.move(point)
+                        self.stroke_move(point)
                     else:
-                        self.move(point)
+                        self.stroke_end(point)
                 if kind in (QEvent.TouchEnd, QEvent.TouchCancel):
-                    self.drawing = False
+                    self.stroke_end()
                 event.accept()
                 return True
         if kind in (QEvent.TabletPress, QEvent.TabletMove, QEvent.TabletRelease) and self.tool != 'pointer':
             point = self.mapToScene(event.position().toPoint())
             if kind == QEvent.TabletPress:
-                self.begin(point)
+                self.stroke_begin(point)
+            elif kind == QEvent.TabletMove:
+                self.stroke_move(point)
             else:
-                self.move(point)
-            if kind == QEvent.TabletRelease:
-                self.drawing = False
+                self.stroke_end(point)
             event.accept()
             return True
         return super().viewportEvent(event)
 
-    def capture(self):
+    def capture(self, width=WIDTH, height=HEIGHT):
         # Decode only on explicit capture; never copy GPU frames to CPU every frame.
         frame = self.video.videoSink().videoFrame()
         if not frame.isValid():
             raise ValueError('캡처할 영상이 없습니다. 영상을 먼저 재생해 주세요.')
-        result = QImage(WIDTH, HEIGHT, QImage.Format_RGB32)
+        result = QImage(width, height, QImage.Format_RGB32)
         result.fill(QColor('#111d19'))
         painter = QPainter(result)
         painter.setRenderHints(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
+        # Recording asks for its own size directly instead of rescaling every 1080p frame.
+        painter.scale(width / WIDTH, height / HEIGHT)
         # Same Qt rendering path as the screen, including MOV rotation/mirroring.
         paint_frame(frame, painter)
         self.paint_subtitle(painter)

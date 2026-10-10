@@ -11,6 +11,18 @@ from PySide6.QtWebEngineCore import QWebEngineProfile, QWebEnginePage, QWebEngin
 from .media_tools import resource
 from .youtube_url import video_id
 
+SKIP_SCRIPT = 'SsenPlayer available-ad-skip'
+
+
+def skip_script():
+    script = QWebEngineScript()
+    script.setName(SKIP_SCRIPT)
+    script.setInjectionPoint(QWebEngineScript.DocumentReady)
+    script.setWorldId(QWebEngineScript.MainWorld)
+    script.setRunsOnSubFrames(True)
+    script.setSourceCode("setInterval(()=>document.querySelectorAll('.ytp-ad-skip-button,.ytp-skip-ad-button,.ytp-ad-skip-button-modern').forEach(b=>{if(b.offsetWidth)b.click()}),500)")
+    return script
+
 
 class AdBlock(QWebEngineUrlRequestInterceptor):
     def __init__(self, parent=None):
@@ -82,17 +94,16 @@ class InkOverlay(QWidget):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self.model.begin(self.point(event.position()))
+            self.model.stroke_begin(self.point(event.position()))
             self.update()
             event.accept()
 
     def mouseMoveEvent(self, event):
-        self.model.move(self.point(event.position()))
+        self.model.stroke_move(self.point(event.position()))
         self.update()
 
     def mouseReleaseEvent(self, event):
-        self.model.move(self.point(event.position()))
-        self.model.drawing = False
+        self.model.stroke_end(self.point(event.position()))
         self.update()
 
     def event(self, event):
@@ -101,16 +112,18 @@ class InkOverlay(QWidget):
             points = event.points()
             if points:
                 point = self.point(points[0].position())
-                if kind == QEvent.TouchBegin: self.model.begin(point)
-                else: self.model.move(point)
-            if kind in (QEvent.TouchEnd, QEvent.TouchCancel): self.model.drawing = False
+                if kind == QEvent.TouchBegin: self.model.stroke_begin(point)
+                elif kind == QEvent.TouchUpdate: self.model.stroke_move(point)
+                else: self.model.stroke_end(point)
+            if kind in (QEvent.TouchEnd, QEvent.TouchCancel): self.model.stroke_end()
             self.update()
             event.accept()
             return True
         if kind in (QEvent.TabletPress, QEvent.TabletMove, QEvent.TabletRelease):
-            if kind == QEvent.TabletPress: self.model.begin(self.point(event.position()))
-            else: self.model.move(self.point(event.position()))
-            if kind == QEvent.TabletRelease: self.model.drawing = False
+            point = self.point(event.position())
+            if kind == QEvent.TabletPress: self.model.stroke_begin(point)
+            elif kind == QEvent.TabletMove: self.model.stroke_move(point)
+            else: self.model.stroke_end(point)
             self.update()
             event.accept()
             return True
@@ -135,13 +148,7 @@ class YouTubeSurface(QWidget):
         self.page.settings().setAttribute(QWebEngineSettings.PlaybackRequiresUserGesture, False)
         self.page.settings().setAttribute(QWebEngineSettings.FullScreenSupportEnabled, False)
         self.page.settings().setAttribute(QWebEngineSettings.JavascriptCanOpenWindows, False)
-        script = QWebEngineScript()
-        script.setName('SsenPlayer available-ad-skip')
-        script.setInjectionPoint(QWebEngineScript.DocumentReady)
-        script.setWorldId(QWebEngineScript.MainWorld)
-        script.setRunsOnSubFrames(True)
-        script.setSourceCode("setInterval(()=>{if(!window.__ssenDisableSkip)document.querySelectorAll('.ytp-ad-skip-button,.ytp-skip-ad-button,.ytp-ad-skip-button-modern').forEach(b=>{if(b.offsetWidth)b.click()})},500)")
-        self.page.scripts().insert(script)
+        self.page.scripts().insert(skip_script())
         self.overlay = InkOverlay(model, self)
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.poll)
@@ -178,22 +185,12 @@ class YouTubeSurface(QWidget):
         self.page.runJavaScript('window.ssenCommand && window.ssenCommand('+json.dumps(name)+','+json.dumps(args)+')')
 
     def set_blocking(self, enabled):
+        # Takes effect on the next load(); request filtering and the injected skip go together.
         self.blocker.enabled = enabled
-        # Disable injected skip behavior as well as request filtering.
         scripts = self.page.scripts()
-        for script in scripts.toList():
-            if script.name() == 'SsenPlayer available-ad-skip':
-                scripts.remove(script)
-                if enabled: scripts.insert(script)
-        if enabled and not any(s.name() == 'SsenPlayer available-ad-skip' for s in scripts.toList()):
-            script = QWebEngineScript()
-            script.setName('SsenPlayer available-ad-skip')
-            script.setInjectionPoint(QWebEngineScript.DocumentReady)
-            script.setWorldId(QWebEngineScript.MainWorld)
-            script.setRunsOnSubFrames(True)
-            script.setSourceCode("setInterval(()=>document.querySelectorAll('.ytp-ad-skip-button,.ytp-skip-ad-button,.ytp-ad-skip-button-modern').forEach(b=>{if(b.offsetWidth)b.click()}),500)")
-            scripts.insert(script)
-        self.view.reload()
+        for script in scripts.find(SKIP_SCRIPT):
+            scripts.remove(script)
+        if enabled: scripts.insert(skip_script())
 
     def sync_tool(self):
         self.overlay.setAttribute(Qt.WA_TransparentForMouseEvents, self.model.tool == 'pointer')
@@ -212,14 +209,15 @@ class YouTubeSurface(QWidget):
         p = QPainter(self)
         p.fillRect(self.rect(), QColor('#111d19'))
 
-    def capture(self):
+    def capture(self, width=1920, height=1080):
         if not self.state.get('ready') or self.state.get('error'):
             raise ValueError('YouTube 영상이 준비된 뒤 캡처해 주세요.')
         # grab only the embed surface; desktop notifications and toolbar are excluded.
         frame = self.view.grab().toImage()
-        result = frame.scaled(1920, 1080, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+        result = frame.scaled(width, height, Qt.IgnoreAspectRatio, Qt.SmoothTransformation).convertToFormat(QImage.Format_RGB32)
         p = QPainter(result)
         p.setRenderHint(QPainter.Antialiasing)
+        p.scale(width/1920, height/1080)
         self.model.ink.paint(p)
         p.end()
         return result

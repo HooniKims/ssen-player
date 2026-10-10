@@ -23,9 +23,9 @@ while time.monotonic()<deadline:
     QTest.qWait(200)
     if window.youtube.state.get('time',0)>1 or window.youtube.state.get('error'): break
 window.choose_tool('pen')
-window.canvas.begin(QPointF(400,400))
-window.canvas.move(QPointF(1400,700))
-window.canvas.drawing=False
+window.canvas.stroke_begin(QPointF(400,400))
+window.canvas.stroke_move(QPointF(1400,700))
+window.canvas.stroke_end()
 window.refresh_ink()
 QTest.qWait(200)
 window.grab().save(str(out/'youtube.png'))
@@ -43,9 +43,9 @@ if window.youtube.state.get('time',0)>1 and not window.youtube.state.get('error'
     window.recorder.finished.connect(lambda path,error:recorded.append((path,error)))
     window.recorder.start(str(out),system_audio=False,microphone=False)
     for i in range(30):
-        window.canvas.begin(QPointF(600+i*8,600))
-        window.canvas.move(QPointF(600+i*8,700))
-        window.canvas.drawing=False
+        window.canvas.stroke_begin(QPointF(600+i*8,600))
+        window.canvas.stroke_move(QPointF(600+i*8,700))
+        window.canvas.stroke_end()
         window.refresh_ink()
         QTest.qWait(100)
         time.sleep(.005)

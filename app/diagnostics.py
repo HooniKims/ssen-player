@@ -23,9 +23,9 @@ def run(application, window, output, started):
         timer.stop()
         window.media.pause()
         window.choose_tool('pen')
-        window.canvas.begin(QPointF(600, 300))
-        window.canvas.move(QPointF(1200, 700))
-        window.canvas.drawing = False
+        window.canvas.stroke_begin(QPointF(600, 300))
+        window.canvas.stroke_move(QPointF(1200, 700))
+        window.canvas.stroke_end()
         window.canvas.capture().save(str(output/'packaged-capture.png'))
         window.grab().save(str(output/'packaged-window.png'))
         report.update(decoded=True, capture_with_ink=True, frame_width=frame.width(), frame_height=frame.height())

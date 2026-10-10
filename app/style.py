@@ -21,6 +21,7 @@ QPushButton#pureExit { background:#f2f0eb; border-radius:18px; }
 QPushButton#iconButton { background:transparent; border:1px solid transparent; padding:0; border-radius:22px; }
 QPushButton#iconButton:hover { background:#e5f1eb; }
 QPushButton#iconButton:focus { border-color:#00754a; }
+QPushButton#iconButton:checked { background:#00754a; }
 QFrame#tools { background:#ffffff; border:1px solid #e1e5df; border-radius:22px; }
 QFrame#toolOptions { background:#ffffff; }
 QFrame#tools QPushButton { padding:0 10px; }
@@ -41,6 +42,7 @@ QListWidget { background:#fff; border:0; border-radius:12px; padding:8px; }
 QListWidget::item { padding:13px 6px; border-radius:9px; }
 QListWidget::item:selected { background:#e5f1eb; color:#006241; }
 QScrollArea { border:0; background:transparent; }
+QLabel#countdown { font-family:Ghanachocolate; font-size:96px; color:white; background:rgba(17,29,25,190); border-radius:90px; }
 QToolTip { background:#183c30; color:white; border:0; padding:8px; }
 QCheckBox { spacing:10px; padding:9px 0; }
 QCheckBox::indicator { width:22px; height:22px; }

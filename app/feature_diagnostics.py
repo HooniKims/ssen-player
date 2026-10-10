@@ -50,9 +50,9 @@ def run(application, window, output):
                     report['youtube'] = dict(state)
                     report['blocked_requests'] = window.youtube.blocker.blocked
                     window.choose_tool('pen')
-                    window.canvas.begin(QPointF(400, 400))
-                    window.canvas.move(QPointF(1400, 700))
-                    window.canvas.drawing = False
+                    window.canvas.stroke_begin(QPointF(400, 400))
+                    window.canvas.stroke_move(QPointF(1400, 700))
+                    window.canvas.stroke_end()
                     window.refresh_ink()
                     window.capture_image().save(str(output/'youtube-ink.png'))
                     window.apply_loop(5000, 7000)

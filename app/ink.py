@@ -65,11 +65,20 @@ class Ink:
         self.strokes = []
         self.history = []
         self.redo_stack = []
+        self._pending_redo = []
 
     def checkpoint(self):
         self.history.append(list(self.strokes))
         self.history = self.history[-100:]
-        self.redo_stack.clear()
+        self._pending_redo, self.redo_stack = self.redo_stack, []
+
+    def commit(self):
+        # An eraser tap that hit nothing must not leave an undo step that does nothing.
+        if self.history and len(self.history[-1]) == len(self.strokes) and \
+                all(a is b for a, b in zip(self.history[-1], self.strokes)):
+            self.history.pop()
+            self.redo_stack = self._pending_redo
+        self._pending_redo = []
 
     def undo(self):
         if self.history:

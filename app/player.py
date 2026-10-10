@@ -4,19 +4,20 @@ prepare()
 import json
 from datetime import datetime
 from pathlib import Path
-from PySide6.QtCore import Qt, QUrl, QTimer, QSettings, QStandardPaths, Signal, QObject, QRunnable, QThreadPool
+from PySide6.QtCore import Qt, QUrl, QTimer, QSettings, QStandardPaths, Signal, QObject, QRunnable, QThreadPool, QEvent
 from PySide6.QtGui import QDesktopServices, QShortcut, QKeySequence, QFont
 from PySide6.QtWidgets import (QMainWindow, QWidget, QFrame, QVBoxLayout, QHBoxLayout, QPushButton,
     QLabel, QFileDialog, QSlider, QComboBox, QButtonGroup, QGridLayout, QDialog, QCheckBox,
-    QListWidget, QScrollArea, QSizePolicy, QStackedWidget, QMessageBox)
+    QListWidget, QScrollArea, QSizePolicy, QStackedWidget, QApplication, QProxyStyle, QStyle)
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from .canvas import Canvas
 from .ink import Ink
 from .subtitles import read_subtitles
 from . import VERSION
-from .classroom import ClassroomFeatures
+from .classroom import ClassroomFeatures, SPEEDS
 from .controls import button, icon_only
 
+COUNTDOWN_SECONDS = 5
 MEDIA_FILTER = '동영상 (*.mov *.mp4 *.mkv *.avi *.webm *.m4v *.wmv *.flv *.ts *.mts *.m2ts *.mpg *.mpeg *.3gp);;오디오 (*.mp3 *.flac *.wav *.m4a *.ogg);;모든 파일 (*)'
 
 
@@ -25,6 +26,14 @@ def stamp(ms):
     h, seconds = divmod(seconds, 3600)
     m, s = divmod(seconds, 60)
     return f'{h}:{m:02}:{s:02}' if h else f'{m:02}:{s:02}'
+
+
+class TapToSeek(QProxyStyle):
+    # A tap on the track jumps there; paging by one step is useless on a whiteboard.
+    def styleHint(self, hint, option=None, widget=None, data=None):
+        if hint == QStyle.SH_Slider_AbsoluteSetButtons:
+            return Qt.LeftButton.value
+        return super().styleHint(hint, option, widget, data)
 
 
 class Saved(QObject):
@@ -101,9 +110,9 @@ class Player(ClassroomFeatures, QMainWindow):
     def _build(self):
         central = QWidget()
         self.setCentralWidget(central)
-        self.layout = QVBoxLayout(central)
-        self.layout.setContentsMargins(18, 10, 18, 12)
-        self.layout.setSpacing(12)
+        self.root = QVBoxLayout(central)
+        self.root.setContentsMargins(18, 10, 18, 12)
+        self.root.setSpacing(12)
         self.header = QFrame(objectName='header')
         row = QHBoxLayout(self.header)
         row.setContentsMargins(3, 0, 0, 0)
@@ -114,7 +123,7 @@ class Player(ClassroomFeatures, QMainWindow):
         row.addWidget(button('파일 열기', self.open_files, 'primary', 'Ctrl+O · 여러 영상 선택'))
         row.addWidget(button('재생 목록', self.toggle_queue))
         row.addWidget(button('설정', self.show_settings))
-        self.layout.addWidget(self.header)
+        self.root.addWidget(self.header)
         self.middle = QHBoxLayout()
         self.middle.setSpacing(12)
         self.queue_list = QListWidget()
@@ -164,7 +173,7 @@ class Player(ClassroomFeatures, QMainWindow):
         colors.setSpacing(5)
         self.colors = QButtonGroup(self)
         for i, color in enumerate(['#ffdf59', '#ff6565', '#55d9fc', '#ffffff', '#59dd91', '#151f1a']):
-            b = button('', lambda _, c=color: setattr(self.canvas, 'color', c), 'color', color)
+            b = button('', lambda _, c=color: self.choose_color(c), 'color', color)
             b.setFixedSize(44, 44)
             b.setAccessibleName('펜 색상 ' + color)
             b.setCheckable(True)
@@ -176,7 +185,7 @@ class Player(ClassroomFeatures, QMainWindow):
         self.width_combo = QComboBox()
         self.width_combo.addItems(['가는 펜', '중간 펜', '굵은 펜'])
         self.width_combo.setCurrentIndex(1)
-        self.width_combo.currentIndexChanged.connect(lambda i: setattr(self.canvas, 'width', [3, 6, 12][i]))
+        self.width_combo.currentIndexChanged.connect(self.choose_width)
         side.addWidget(self.width_combo)
         self.eraser_size = QComboBox()
         self.eraser_size.addItems(['작은 지우개', '중간 지우개', '큰 지우개'])
@@ -206,14 +215,16 @@ class Player(ClassroomFeatures, QMainWindow):
         self.window_button.hide()
         side.addWidget(self.window_button)
         self.middle.addWidget(self.tools_scroll)
-        self.layout.addLayout(self.middle, 1)
+        self.root.addLayout(self.middle, 1)
         self.footer = QFrame(objectName='footer')
         foot = QVBoxLayout(self.footer)
         foot.setContentsMargins(0, 0, 0, 0)
         track = QHBoxLayout()
         self.time = QLabel('00:00 / 00:00')
         self.time.setMinimumWidth(140)
+        self.seek_style = TapToSeek()
         self.seek = QSlider(Qt.Horizontal)
+        self.seek.setStyle(self.seek_style)
         self.seek.setRange(0, 1)
         self.seek.setMinimumHeight(28)
         self.seek.sliderReleased.connect(lambda: self.seek_to(self.seek.value()))
@@ -227,13 +238,17 @@ class Player(ClassroomFeatures, QMainWindow):
         self.play_button = button('재생', self.toggle, 'primary', 'Space')
         self.play_button.setMinimumWidth(70)
         controls.addWidget(self.play_button)
+        self.countdown_button = icon_only(button('5초 후 재생', self.start_countdown,
+            tip='5초 후 재생 · 화면의 5, 4, 3, 2, 1이 사라지는 순간 재생 · 다시 누르면 취소'))
+        self.countdown_button.setCheckable(True)
+        controls.addWidget(self.countdown_button)
         controls.addWidget(button('+5초', lambda: self.jump(5000)))
         controls.addWidget(icon_only(button('다음', lambda: self.next_file(1))))
         self.speed = QComboBox()
         self.speed.addItems(['0.5×', '0.75×', '1.0×', '1.25×', '1.5×', '2.0×'])
         self.speed.setCurrentIndex(2)
         self.speed.setToolTip('재생 속도')
-        self.speed.currentIndexChanged.connect(lambda i: self.set_speed([.5, .75, 1, 1.25, 1.5, 2][i]))
+        self.speed.currentIndexChanged.connect(lambda i: self.set_speed(SPEEDS[i]))
         controls.addWidget(self.speed)
         self.ab_button = button('여기부터', self.ab_repeat, tip='시작 장면에서 여기부터 → 끝 장면에서 여기까지')
         controls.addWidget(self.ab_button)
@@ -244,6 +259,7 @@ class Player(ClassroomFeatures, QMainWindow):
         self.mute_button = button('음소거', self.toggle_mute)
         controls.addWidget(self.mute_button)
         self.volume = QSlider(Qt.Horizontal)
+        self.volume.setStyle(self.seek_style)
         self.volume.setRange(0, 100)
         self.volume.setFixedWidth(95)
         self.volume.setValue(round(self.audio.volume()*100))
@@ -251,17 +267,26 @@ class Player(ClassroomFeatures, QMainWindow):
         self.volume.valueChanged.connect(self.set_volume)
         controls.addWidget(self.volume)
         foot.addLayout(controls)
-        self.layout.addWidget(self.footer)
+        self.root.addWidget(self.footer)
         self.status = QLabel('영상 위에 필기하고 수업 장면을 캡처해 보세요.', objectName='status')
         self.status.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
-        self.layout.addWidget(self.status)
+        self.root.addWidget(self.status)
         self.pure_exit = button('수업 도구 보기', lambda: self.set_mode('classroom'), 'pureExit')
         self.pure_exit.setParent(self)
         self.pure_exit.hide()
         self.exit_timer = QTimer(self)
         self.exit_timer.setSingleShot(True)
         self.exit_timer.timeout.connect(self.pure_exit.hide)
-        self.canvas.viewport().installEventFilter(self)
+        # Shown over both the local canvas and the YouTube view; never blocks pen input.
+        self.countdown_label = QLabel(self.video_stack, objectName='countdown')
+        self.countdown_label.setAlignment(Qt.AlignCenter)
+        self.countdown_label.setFixedSize(180, 180)
+        self.countdown_label.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self.countdown_label.hide()
+        self.countdown_timer = QTimer(self)
+        self.countdown_timer.setTimerType(Qt.PreciseTimer)
+        self.countdown_timer.timeout.connect(self.countdown_tick)
+        self.countdown_left = 0
 
     def notify(self, text):
         self.status.setText(text)
@@ -287,6 +312,7 @@ class Player(ClassroomFeatures, QMainWindow):
             self.notify('파일을 찾을 수 없습니다: ' + path)
             return
         self.save_position()
+        self.cancel_countdown()
         if self.segment_dialog: self.segment_dialog.close()
         if self.current:
             self.inks[self.current] = self.canvas.ink
@@ -310,6 +336,9 @@ class Player(ClassroomFeatures, QMainWindow):
         positions = self._positions()
         self.pending_resume = positions.get(path, 0)
         self.media.setSource(QUrl.fromLocalFile(path))
+        # Speed may have changed while YouTube was playing; an unchanged source emits no durationChanged.
+        self.media.setPlaybackRate(SPEEDS[self.speed.currentIndex()])
+        self.seek.setRange(0, max(1, self.media.duration()))
         for suffix in ('.srt', '.smi', '.vtt'):
             sub = Path(path).with_suffix(suffix)
             if sub.is_file():
@@ -332,6 +361,7 @@ class Player(ClassroomFeatures, QMainWindow):
             self.settings.setValue('positions', json.dumps(dict(list(positions.items())[-100:])))
 
     def toggle(self):
+        self.cancel_countdown()
         if self.source_kind == 'youtube':
             self.youtube.command('toggle')
             return
@@ -341,6 +371,51 @@ class Player(ClassroomFeatures, QMainWindow):
             self.media.pause()
         else:
             self.media.play()
+
+    def start_countdown(self):
+        if self.countdown_timer.isActive():
+            self.cancel_countdown()
+            self.notify('카운트다운을 취소했습니다.')
+            return
+        self.countdown_button.setChecked(False)
+        if not self.current:
+            self.notify('영상을 먼저 열어 주세요.')
+            return
+        if self.source_kind == 'youtube' and not self.youtube.state.get('ready'):
+            self.notify('YouTube 영상이 준비된 뒤 다시 눌러 주세요.')
+            return
+        self.pause_playback()
+        self.countdown_left = COUNTDOWN_SECONDS
+        self.show_countdown()
+        self.countdown_button.setChecked(True)
+        self.countdown_timer.start(1000)
+        self.notify('숫자가 사라지는 0의 순간에 재생합니다. 녹화 프로그램의 시작 버튼을 그때 누르세요.')
+
+    def countdown_tick(self):
+        self.countdown_left -= 1
+        if self.countdown_left > 0:
+            self.show_countdown()
+            return
+        # Hide before playing so a screen recorder started at 0 never sees the number.
+        self.cancel_countdown()
+        self.resume_playback()
+        self.notify('재생을 시작했습니다.')
+
+    def show_countdown(self):
+        self.countdown_label.setText(str(self.countdown_left))
+        self.place_countdown()
+        self.countdown_label.show()
+        self.countdown_label.raise_()
+
+    def place_countdown(self):
+        label = self.countdown_label
+        label.move((self.video_stack.width()-label.width())//2, (self.video_stack.height()-label.height())//2)
+
+    def cancel_countdown(self):
+        if not self.countdown_timer.isActive() and self.countdown_label.isHidden(): return
+        self.countdown_timer.stop()
+        self.countdown_label.hide()
+        self.countdown_button.setChecked(False)
 
     def playback_state(self, state):
         if self.source_kind != 'local': return
@@ -396,6 +471,14 @@ class Player(ClassroomFeatures, QMainWindow):
         self.eraser_size.setVisible(name == 'area_eraser')
         self.width_combo.setVisible(name not in ('eraser', 'area_eraser'))
         if self.youtube: self.youtube.sync_tool()
+
+    def choose_color(self, color):
+        self.canvas.color = color
+        if self.canvas.tool not in ('pen', 'marker'): self.choose_tool('pen')
+
+    def choose_width(self, index):
+        self.canvas.pen_width = [3, 6, 12][index]
+        if self.canvas.tool not in ('pen', 'marker'): self.choose_tool('pen')
 
     def undo(self):
         self.canvas.ink.undo()
@@ -474,20 +557,24 @@ class Player(ClassroomFeatures, QMainWindow):
         self.window_button.setVisible(mode == 'classroom')
         self.full_button.setText('완전 화면' if mode == 'classroom' else '전체 화면')
         margin = 0 if mode == 'pure' else 12
-        self.layout.setContentsMargins(margin, margin, margin, margin)
-        self.layout.setSpacing(0 if mode == 'pure' else 10)
+        self.root.setContentsMargins(margin, margin, margin, margin)
+        self.root.setSpacing(0 if mode == 'pure' else 10)
         if mode == 'window':
             self.showMaximized() if getattr(self, 'was_maximized', False) else self.showNormal()
         else:
             self.showFullScreen()
         self.pure_exit.hide()
+        # Watch the whole app: on YouTube, touches land in the browser view, not the canvas.
+        QApplication.instance().removeEventFilter(self)
         if mode == 'pure':
+            QApplication.instance().installEventFilter(self)
             self.saved_tool = self.canvas.tool
             self.choose_tool('pointer')
             self.reveal_exit()
         elif previous_mode == 'pure':
             self.choose_tool(getattr(self, 'saved_tool', 'pointer'))
         QTimer.singleShot(0, lambda: self.canvas.fitInView(self.canvas.sceneRect(), Qt.KeepAspectRatio))
+        QTimer.singleShot(0, self.place_countdown)
 
     def reveal_exit(self):
         self.pure_exit.adjustSize()
@@ -497,8 +584,7 @@ class Player(ClassroomFeatures, QMainWindow):
         self.exit_timer.start(2500)
 
     def eventFilter(self, obj, event):
-        from PySide6.QtCore import QEvent
-        if self.mode == 'pure' and event.type() in (QEvent.MouseMove, QEvent.MouseButtonPress, QEvent.TouchBegin):
+        if self.mode == 'pure' and event.type() in (QEvent.MouseMove, QEvent.MouseButtonPress, QEvent.TouchBegin, QEvent.TabletPress):
             self.reveal_exit()
         return super().eventFilter(obj, event)
 

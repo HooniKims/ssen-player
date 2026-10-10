@@ -13,7 +13,8 @@ ICONS = {'파일 열기':'folder-open','YouTube':'youtube-logo','재생 목록':
     '이전':'skip-back','다음':'skip-forward','−5초':'rewind','+5초':'fast-forward',
     '재생':'play','일시 정지':'pause','한 편 반복':'repeat','음소거':'speaker-high',
     '소리 켜기':'speaker-slash','여기부터':'bookmark-simple','여기까지':'bookmark-simple',
-    '반복 해제':'repeat','구간 설정':'scissors','수업 녹화':'record','수업 도구 보기':'pen'}
+    '반복 해제':'repeat','구간 설정':'scissors','수업 녹화':'record','수업 도구 보기':'pen',
+    '5초 후 재생':'timer'}
 
 @lru_cache(maxsize=100)
 def icon(name, primary=False):

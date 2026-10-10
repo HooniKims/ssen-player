@@ -47,12 +47,12 @@ for frequency in (440,660):
 QTest.qWait(900)
 window.choose_tool('pen')
 window.canvas.color='#ffffff'
-window.canvas.width=18
-window.canvas.begin(QPointF(300,500))
+window.canvas.pen_width=18
+window.canvas.stroke_begin(QPointF(300,500))
 for x in range(320,1500,20):
-    window.canvas.move(QPointF(x,500))
+    window.canvas.stroke_move(QPointF(x,500))
     QTest.qWait(15)
-window.canvas.drawing=False
+window.canvas.stroke_end()
 window.media.pause()
 QTest.qWait(800)
 window.recorder.stop()
