@@ -7,6 +7,8 @@ os.environ['QT_MEDIA_BACKEND'] = 'ffmpeg'
 STARTED = time.perf_counter()
 
 def main():
+    from app.identity import set_taskbar_identity
+    set_taskbar_identity()
     from PySide6.QtWidgets import QApplication
     from PySide6.QtCore import Qt
     from PySide6.QtGui import QFontDatabase, QIcon
@@ -18,10 +20,13 @@ def main():
     application.setOrganizationName('HooniKim')
     base = Path(getattr(sys, '_MEIPASS', Path(__file__).parent))
     QFontDatabase.addApplicationFont(str(base/'assets/Ghanachocolate.ttf'))
-    application.setWindowIcon(QIcon(str(base/'assets/icon.ico')))
+    # PNG loading is built into Qt; runtime branding must not depend on qico.dll.
+    app_icon = QIcon(str(base/'assets/icon.png'))
+    application.setWindowIcon(app_icon)
     application.setStyle('Fusion')
     application.setStyleSheet(STYLE)
     window = Player()
+    window.setWindowIcon(app_icon)
     window.show()
     args = list(sys.argv[1:])
     diagnostics = None

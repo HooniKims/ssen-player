@@ -23,8 +23,8 @@ Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
 [Files]
 Source: "..\dist\SsenPlayer\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 [Icons]
-Name: "{autoprograms}\쎈player"; Filename: "{app}\SsenPlayer.exe"
-Name: "{autodesktop}\쎈player"; Filename: "{app}\SsenPlayer.exe"; Tasks: desktopicon
+Name: "{autoprograms}\쎈player"; Filename: "{app}\SsenPlayer.exe"; IconFilename: "{app}\SsenPlayer.exe"; AppUserModelID: "HooniKim.SsenPlayer"
+Name: "{autodesktop}\쎈player"; Filename: "{app}\SsenPlayer.exe"; IconFilename: "{app}\SsenPlayer.exe"; AppUserModelID: "HooniKim.SsenPlayer"; Tasks: desktopicon
 [Tasks]
 Name: desktopicon; Description: "바탕 화면에 바로가기 만들기"; Flags: unchecked
 [Run]
