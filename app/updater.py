@@ -1,5 +1,4 @@
-"""Opt-in HTTPS feed with Ed25519-signed manifests; no GitHub credentials shipped."""
-import base64
+"""GitHub Releases update check, like the other Ssen apps; no GitHub credentials shipped."""
 import hashlib
 import json
 import re
@@ -9,7 +8,6 @@ import tempfile
 import urllib.request
 from pathlib import Path
 from urllib.parse import urlparse
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from PySide6.QtCore import QObject, Signal, QRunnable, QThreadPool
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton, QApplication
 from . import VERSION
@@ -32,12 +30,13 @@ def canonical(payload):
     return json.dumps(payload, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode('utf-8')
 
 
-def verify_manifest(document, public_key):
+def verify_manifest(document, feed):
+    # Trust comes from HTTPS to the release itself; the installer is then checked by size and SHA-256.
+    # A "signature" field, still written for 0.2.3 installs, is ignored here.
     payload = document['payload']
-    key = Ed25519PublicKey.from_public_bytes(base64.b64decode(public_key, validate=True))
-    key.verify(base64.b64decode(document['signature'], validate=True), canonical(payload))
     version_tuple(payload['version'])
-    https_url(payload['url'])
+    if not https_url(payload['url']).startswith(feed.split('/releases/')[0]+'/releases/download/'):
+        raise ValueError('업데이트 파일이 이 앱의 GitHub 릴리스에 있지 않습니다.')
     if not re.fullmatch('[a-f0-9]{64}', payload['sha256']):
         raise ValueError('잘못된 SHA-256입니다.')
     if type(payload['size']) is not int or not 0 < payload['size'] < 1024**3:
@@ -45,13 +44,13 @@ def verify_manifest(document, public_key):
     return payload
 
 
-def fetch_manifest(feed, public_key):
+def fetch_manifest(feed):
     with urllib.request.urlopen(https_url(feed), timeout=20) as response:
         https_url(response.url)
         data = response.read(128*1024+1)
     if len(data) > 128*1024:
         raise ValueError('업데이트 정보가 너무 큽니다.')
-    return verify_manifest(json.loads(data), public_key)
+    return verify_manifest(json.loads(data), feed)
 
 
 def download(payload):
@@ -84,14 +83,14 @@ def load_config():
 
 
 def newer_release(config):
-    payload = fetch_manifest(config['feed_url'], config['public_key'])
+    payload = fetch_manifest(config['feed_url'])
     return payload if version_tuple(payload['version']) > version_tuple(VERSION) else None
 
 
 def check_in_background(window):
     # Ask on every launch until installed; "다음에" simply waits for the next start.
     config = load_config()
-    if not config.get('feed_url') or not config.get('public_key'): return
+    if not config.get('feed_url'): return
     window.update_task = Task(lambda: newer_release(config))
     window.update_task.signals.done.connect(window.update_checked)
     QThreadPool.globalInstance().start(window.update_task)
@@ -138,7 +137,7 @@ class UpdateDialog(QDialog):
             self.payload = payload
             self.message.setText(f"새 버전 {payload['version']}이 나왔습니다. 지금 업데이트할까요?\n'다음에'를 누르면 다음 실행 때 다시 알려 드립니다.")
             self.action.setText('지금 업데이트')
-        elif not self.config.get('feed_url') or not self.config.get('public_key'):
+        elif not self.config.get('feed_url'):
             self.message.setText('이 버전은 업데이트 배포 주소가 설정되지 않아 앱 안에서 업데이트할 수 없습니다.\n배포 주소를 설정한 버전부터 앱 안에서 업데이트할 수 있습니다.')
             self.action.setEnabled(False)
 
@@ -158,7 +157,7 @@ class UpdateDialog(QDialog):
             self.task.signals.done.connect(self.downloaded)
         else:
             self.message.setText('새 버전을 확인하고 있습니다…')
-            self.task = Task(lambda: fetch_manifest(self.config['feed_url'], self.config['public_key']))
+            self.task = Task(lambda: fetch_manifest(self.config['feed_url']))
             self.task.signals.done.connect(self.checked)
         QThreadPool.globalInstance().start(self.task)
 
