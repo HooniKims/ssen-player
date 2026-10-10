@@ -6,7 +6,7 @@ Windows 수업용 영상 플레이어. 로컬 재생에는 광고가 없습니�
 
 **[설치 파일 다운로드 및 버전 설명](https://github.com/HooniKims/ssen-player/releases/tag/v0.2.2)** · 설치 EXE 또는 압축을 풀어 실행하는 포터블 ZIP을 제공합니다.
 
-![쎈Lite·쎈Pick과 맞춘 버튼과 필기 도구](docs/images/player-0.2.1.png)
+![쎈Lite·쎈Pick과 맞춘 버튼과 필기 도구](docs/images/player-0.2.2.png)
 
 ## 사용
 
