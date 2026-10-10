@@ -1,10 +1,15 @@
 """Install and uninstall only an isolated build inside this workspace."""
 import json
+import argparse
 import subprocess
 import winreg
 from pathlib import Path
 
 root = Path(__file__).resolve().parent.parent
+parser = argparse.ArgumentParser()
+parser.add_argument('--media', nargs='*', help='Selected regression samples; omit for all formats')
+args = parser.parse_args()
+version = (root/'app/__init__.py').read_text('utf-8').split("'")[1]
 target = (root/'.tools/install-smoke').resolve()
 if root not in target.parents or target.name != 'install-smoke':
     raise RuntimeError('Unsafe installation test directory')
@@ -15,8 +20,8 @@ try:
             raise RuntimeError('An existing user installation must not be replaced by this test: '+str(installed))
 except FileNotFoundError:
     pass
-installer = root/'artifacts/SsenPlayer-Setup-0.2.1.exe'
-output = root/'artifacts/qa/installed-0.2.1'
+installer = root/f'artifacts/SsenPlayer-Setup-{version}.exe'
+output = root/f'artifacts/qa/installed-{version}'
 output.mkdir(parents=True, exist_ok=True)
 startup = subprocess.STARTUPINFO()
 startup.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -32,6 +37,8 @@ report = json.loads((output/'packaged.json').read_text('utf-8'))
 assert report['decoded'] and report['capture_with_ink']
 checked = []
 for media in sorted((root/'artifacts/test-media').glob('*')):
+    if args.media and media.name not in args.media:
+        continue
     if media.suffix not in ('.mov','.mp4','.mkv','.avi','.webm'):
         continue
     destination = output/media.stem

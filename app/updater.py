@@ -107,7 +107,7 @@ class UpdateDialog(QDialog):
         layout.setSpacing(15)
         layout.setContentsMargins(25, 25, 25, 25)
         layout.addWidget(QLabel(f'현재 버전 {VERSION}'))
-        self.message = QLabel('새 버전을 확인하면 인터넷에 연결합니다.')
+        self.message = QLabel('인터넷에 연결해 새 버전을 확인합니다.')
         self.message.setWordWrap(True)
         layout.addWidget(self.message)
         self.action = QPushButton('새 버전 확인')
@@ -117,7 +117,7 @@ class UpdateDialog(QDialog):
         close.clicked.connect(self.reject)
         layout.addWidget(close)
         if not self.config.get('feed_url') or not self.config.get('public_key'):
-            self.message.setText('이 개발 버전은 업데이트 배포 주소가 아직 연결되지 않았습니다.\n배포 주소를 연결한 설치본부터 앱 안에서 업데이트할 수 있습니다.')
+            self.message.setText('이 버전은 업데이트 배포 주소가 설정되지 않아 앱 안에서 업데이트할 수 없습니다.\n배포 주소를 설정한 버전부터 앱 안에서 업데이트할 수 있습니다.')
             self.action.setEnabled(False)
 
     def act(self):
@@ -131,7 +131,7 @@ class UpdateDialog(QDialog):
         self.busy = True
         self.action.setEnabled(False)
         if self.payload:
-            self.message.setText('업데이트를 내려받고 무결성을 확인하고 있습니다…')
+            self.message.setText('업데이트를 내려받고 파일이 손상되거나 바뀌지 않았는지 확인하고 있습니다…')
             self.task = Task(lambda: download(self.payload))
             self.task.signals.done.connect(self.downloaded)
         else:

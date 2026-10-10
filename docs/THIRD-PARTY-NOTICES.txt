@@ -1,4 +1,4 @@
-쎈player 0.2.1
+쎈player 0.2.2
 
 PySide6 / Shiboken6 / Qt 6.10.2 — The Qt Company Ltd. and contributors.
 Used under LGPL-3.0. Qt libraries remain separate, dynamically loaded DLLs.

@@ -19,7 +19,7 @@ class AudioTrack:
         self.rate = int(device['defaultSampleRate'])
         self.channels = min(2, int(device['maxInputChannels']))
         if self.channels < 1:
-            raise RuntimeError('선택한 오디오 장치를 녹음할 수 없습니다.')
+            raise RuntimeError('선택한 오디오 장치의 소리를 녹음할 수 없습니다.')
         self.path = path
         self.error = None
         self.file = wave.open(str(path), 'wb')

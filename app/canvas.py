@@ -72,7 +72,7 @@ class Canvas(QGraphicsView):
             painter.drawText(QRectF(0, 370, WIDTH, 90), Qt.AlignCenter, '보고, 쓰고, 함께 배우다')
             painter.setFont(QFont('Malgun Gothic', 22))
             painter.setPen(QColor('#576d60'))
-            painter.drawText(QRectF(0, 485, WIDTH, 65), Qt.AlignCenter, '영상을 끌어 놓거나  파일 열기 를 눌러주세요')
+            painter.drawText(QRectF(0, 485, WIDTH, 65), Qt.AlignCenter, '영상을 끌어 놓거나 파일 열기를 눌러 주세요')
             painter.setFont(QFont('Malgun Gothic', 17))
             painter.drawText(QRectF(0, 572, WIDTH, 50), Qt.AlignCenter, 'MOV · MP4 · MKV · AVI · WebM')
         self.paint_subtitle(painter)

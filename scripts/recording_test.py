@@ -81,7 +81,7 @@ spins=dialog.findChildren(QDoubleSpinBox)
 spins[0].setValue(1)
 spins[1].setValue(2)
 next(field for field in dialog.findChildren(QLineEdit) if field.placeholderText().startswith('구간 이름')).setText('실험 장면')
-next(b for b in dialog.findChildren(QPushButton) if b.text()=='이 구간 기억하기').click()
+next(b for b in dialog.findChildren(QPushButton) if b.text()=='구간 목록에 저장').click()
 assert window.segment_data()[window.current][-1]['name']=='실험 장면'
 dialog.close()
 assert window.segment_dialog is None

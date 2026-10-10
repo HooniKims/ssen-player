@@ -22,7 +22,7 @@ class ClassroomFeatures:
         side.insertWidget(1, self.make_button('구간 설정', self.show_segments))
         self.record_button = self.make_button('수업 녹화', self.show_recording)
         side.insertWidget(2, self.record_button)
-        self.record_button.setToolTip('영상 + 움직이는 필기를 MP4로 저장')
+        self.record_button.setToolTip('영상과 필기하는 과정을 MP4로 저장')
 
     @staticmethod
     def make_button(text, callback):
@@ -68,7 +68,7 @@ class ClassroomFeatures:
         blocking = QCheckBox('Brave 엔진 기반 광고 요청 차단 · 실험 기능')
         blocking.setChecked(self.settings.value('youtube_blocking', True, type=bool))
         layout.addWidget(blocking)
-        hint = QLabel('임베드가 허용된 영상을 앱 안에서 재생합니다.\n광고 차단은 완전하지 않으며, 재생 오류가 나면 끄고 다시 열어보세요.')
+        hint = QLabel('앱 안에서 재생하도록 허용된 영상만 열 수 있습니다.\n모든 광고를 차단하지는 못합니다. 재생 오류가 나면 광고 차단을 끄고 다시 열어 보세요.')
         hint.setWordWrap(True)
         layout.addWidget(hint)
         def submit():
@@ -165,7 +165,7 @@ class ClassroomFeatures:
             self.segment_dialog.activateWindow()
             return
         if not self.current or self.current_duration() <= 0:
-            self.notify('영상을 먼저 열어주세요. YouTube는 로딩이 끝나야 구간을 정할 수 있습니다.')
+            self.notify('영상을 먼저 열어 주세요. YouTube 영상은 불러오기가 끝나야 구간을 정할 수 있습니다.')
             return
         dialog = QDialog(self)
         dialog.setWindowTitle('수업 구간 · 반복과 저장')
@@ -225,7 +225,7 @@ class ClassroomFeatures:
                 a,b=values()
                 entries.append(dict(name=name.text().strip() or f'구간 {len(entries)+1}',a=a,b=b))
                 persist()
-                message.setText('저장했습니다. 다음 수업에도 이 영상의 구간 목록에 남습니다.')
+                message.setText('구간을 저장했습니다. 다음 수업에도 이 영상의 구간 목록에서 찾을 수 있습니다.')
             except ValueError as error: message.setText(str(error))
         def recall(item):
             entry=entries[saved.row(item)]
@@ -238,7 +238,7 @@ class ClassroomFeatures:
                 entries.pop(saved.currentRow())
                 persist()
         row=QHBoxLayout()
-        row.addWidget(self.make_button('이 구간 기억하기',save))
+        row.addWidget(self.make_button('구간 목록에 저장',save))
         row.addWidget(self.make_button('선택 구간 삭제',remove))
         layout.addLayout(row)
         refresh()
@@ -274,11 +274,11 @@ class ClassroomFeatures:
         layout=QVBoxLayout(dialog)
         layout.setContentsMargins(22,22,22,22)
         layout.setSpacing(14)
-        layout.addWidget(QLabel('영상과 움직이는 필기를 함께 MP4로 저장합니다.'))
+        layout.addWidget(QLabel('영상과 필기하는 과정을 함께 MP4로 저장합니다.'))
         layout.addWidget(QLabel('720p · 20fps · 도구 모음 제외'))
         sound=QCheckBox('시스템 소리 포함 · 다른 앱의 소리도 녹음됩니다')
         sound.setChecked(True)
-        mic=QCheckBox('기본 마이크 포함 · 교사 설명 녹음')
+        mic=QCheckBox('기본 마이크 소리 포함 · 교사 설명 녹음')
         layout.addWidget(sound)
         layout.addWidget(mic)
         label=QLabel('저장 위치: '+self.capture_dir)
@@ -289,7 +289,7 @@ class ClassroomFeatures:
                 self.recorder.start(self.capture_dir,sound.isChecked(),mic.isChecked())
                 self.record_button.setText('녹화 종료 00:00')
                 self.record_button.setStyleSheet('background:#b13930;color:white;')
-                self.notify('수업 녹화 중 · 영상과 필기를 함께 기록합니다.')
+                self.notify('수업 녹화 중 · 영상과 필기를 함께 녹화합니다.')
                 dialog.accept()
             except Exception as error: label.setText('녹화를 시작하지 못했습니다: '+str(error))
         layout.addWidget(self.make_button('녹화 시작',start))

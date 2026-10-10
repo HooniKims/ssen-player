@@ -8,5 +8,6 @@ build/*.png
 artifacts/
 .tools/
 vendor/
+_workspace/
 *.pem
 *.key

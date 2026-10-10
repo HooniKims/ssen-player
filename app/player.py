@@ -144,7 +144,7 @@ class Player(ClassroomFeatures, QMainWindow):
         tool_grid = QGridLayout()
         tool_grid.setSpacing(6)
         for name, text, tip in [('pointer', '선택', '영상 터치로 재생 / 일시 정지 · V'), ('pen', '펜', '영상 위에 필기 · P'),
-                                ('marker', '형광펜', '반투명 굵은 필기'), ('eraser', '지우개', '닿은 획 지우기')]:
+                                ('marker', '형광펜', '반투명한 굵은 선으로 필기'), ('eraser', '지우개', '닿은 획 지우기')]:
             b = button(text, lambda _, n=name: self.choose_tool(n), tip=tip)
             b.setCheckable(True)
             b.setObjectName('tool')
@@ -239,7 +239,7 @@ class Player(ClassroomFeatures, QMainWindow):
         controls.addWidget(self.volume)
         foot.addLayout(controls)
         self.layout.addWidget(self.footer)
-        self.status = QLabel('영상 위에 필기하고, 캡처로 수업 장면을 남겨보세요.', objectName='status')
+        self.status = QLabel('영상 위에 필기하고 수업 장면을 캡처해 보세요.', objectName='status')
         self.status.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
         self.layout.addWidget(self.status)
         self.pure_exit = button('수업 도구 보기', lambda: self.set_mode('classroom'), 'pureExit')
@@ -429,7 +429,7 @@ class Player(ClassroomFeatures, QMainWindow):
             self.notify(f'시작 지점 {stamp(self.a)} 지정 · 끝 장면에서 여기까지를 눌러주세요.')
         elif self.b is None:
             if self.current_position() <= self.a+500:
-                self.notify('B 지점은 A 지점보다 0.5초 이상 뒤에 지정해 주세요.')
+                self.notify('끝 지점은 시작 지점보다 0.5초 이상 뒤에 지정해 주세요.')
                 return
             self.apply_loop(self.a,self.current_position())
         else:
@@ -497,12 +497,12 @@ class Player(ClassroomFeatures, QMainWindow):
         layout = QVBoxLayout(dialog)
         layout.setContentsMargins(25, 25, 25, 25)
         layout.setSpacing(14)
-        layout.addWidget(QLabel('캡처 저장 폴더'))
+        layout.addWidget(QLabel('캡처·녹화·구간 저장 폴더'))
         folder = QLabel(self.capture_dir)
         folder.setWordWrap(True)
         layout.addWidget(folder)
         def change_folder():
-            path = QFileDialog.getExistingDirectory(dialog, '캡처 저장 폴더 선택', self.capture_dir)
+            path = QFileDialog.getExistingDirectory(dialog, '캡처·녹화·구간 저장 폴더 선택', self.capture_dir)
             if path:
                 self.capture_dir = path
                 self.settings.setValue('capture_dir', path)

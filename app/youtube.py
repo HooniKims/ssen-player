@@ -170,9 +170,9 @@ class YouTubeSurface(QWidget):
         error = state.get('error')
         if error and error != self.last_error:
             self.last_error = error
-            messages = {100:'삭제되었거나 비공개인 영상입니다.', 101:'이 영상은 외부 임베드 재생이 허용되지 않습니다.',
-                        150:'이 영상은 외부 임베드 재생이 허용되지 않습니다.', 153:'YouTube가 임베드 앱 식별을 거부했습니다.'}
-            self.message.emit(messages.get(error, f'YouTube 재생 오류: {error}')+' 차단을 끄고 재시도할 수 있습니다.')
+            messages = {100:'삭제되었거나 비공개인 영상입니다.', 101:'이 영상은 앱 안에서 재생하도록 허용되지 않았습니다.',
+                        150:'이 영상은 앱 안에서 재생하도록 허용되지 않았습니다.', 153:'YouTube가 임베드 앱 식별을 거부했습니다.'}
+            self.message.emit(messages.get(error, f'YouTube 재생 오류: {error}')+' 광고 차단을 끄고 다시 시도할 수 있습니다.')
 
     def command(self, name, *args):
         self.page.runJavaScript('window.ssenCommand && window.ssenCommand('+json.dumps(name)+','+json.dumps(args)+')')
