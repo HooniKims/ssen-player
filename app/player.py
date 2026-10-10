@@ -1,8 +1,11 @@
+from .runtime import prepare
+prepare()
+
 import json
 from datetime import datetime
 from pathlib import Path
 from PySide6.QtCore import Qt, QUrl, QTimer, QSettings, QStandardPaths, Signal, QObject, QRunnable, QThreadPool
-from PySide6.QtGui import QDesktopServices, QShortcut, QKeySequence
+from PySide6.QtGui import QDesktopServices, QShortcut, QKeySequence, QFont
 from PySide6.QtWidgets import (QMainWindow, QWidget, QFrame, QVBoxLayout, QHBoxLayout, QPushButton,
     QLabel, QFileDialog, QSlider, QComboBox, QButtonGroup, QGridLayout, QDialog, QCheckBox,
     QListWidget, QScrollArea, QSizePolicy, QStackedWidget, QMessageBox)
@@ -46,6 +49,9 @@ class SaveCapture(QRunnable):
 class Player(ClassroomFeatures, QMainWindow):
     def __init__(self, settings=None):
         super().__init__()
+        font = self.font()
+        font.setStyleStrategy(QFont.PreferAntialias | QFont.NoSubpixelAntialias)
+        self.setFont(font)
         self.setWindowTitle('쎈player')
         self.resize(1280, 820)
         self.setMinimumSize(1050, 690)

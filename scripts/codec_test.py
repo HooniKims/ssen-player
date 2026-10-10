@@ -22,9 +22,11 @@ if '--file' not in sys.argv:
     (ROOT/'artifacts/qa/codecs.json').write_text(json.dumps(results,indent=2),'utf-8')
     raise SystemExit(0 if results and all(r.get('passed',True) for r in results) else 1)
 os.environ['QT_MEDIA_BACKEND'] = 'ffmpeg'
+from app.runtime import prepare
+prepare()
 from PySide6.QtWidgets import QApplication
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput, QVideoSink, QAudioBufferOutput
-from PySide6.QtCore import QUrl
+from PySide6.QtCore import QUrl, Qt
 from PySide6.QtTest import QTest
 app = QApplication([])
 results = []
@@ -38,10 +40,10 @@ for path in [Path(sys.argv[sys.argv.index('--file')+1])]:
     player.setVideoSink(sink)
     decoded_audio = []
     audio_buffer = QAudioBufferOutput(player)
-    audio_buffer.audioBufferReceived.connect(lambda buf:decoded_audio.append(buf.frameCount()) if buf.isValid() else None)
+    audio_buffer.audioBufferReceived.connect(lambda buf:decoded_audio.append(buf.frameCount()) if buf.isValid() else None, Qt.QueuedConnection)
     player.setAudioBufferOutput(audio_buffer)
     frames = []
-    sink.videoFrameChanged.connect(lambda frame: frames.append(frame.startTime()) if frame.isValid() else None)
+    sink.videoFrameChanged.connect(lambda frame: frames.append(frame.startTime()) if frame.isValid() else None, Qt.QueuedConnection)
     player.setSource(QUrl.fromLocalFile(str(path)))
     player.play()
     for _ in range(100):

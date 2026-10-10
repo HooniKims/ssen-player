@@ -1,8 +1,7 @@
 """Family-app buttons with bundled Phosphor icons and touch targets."""
 from functools import lru_cache
-from PySide6.QtCore import Qt, QSize, QByteArray
-from PySide6.QtGui import QIcon, QPixmap, QPainter
-from PySide6.QtSvg import QSvgRenderer
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QPushButton
 from .media_tools import resource
 
@@ -18,18 +17,11 @@ ICONS = {'파일 열기':'folder-open','YouTube':'youtube-logo','재생 목록':
 
 @lru_cache(maxsize=100)
 def icon(name, primary=False):
-    svg = resource('assets/icons/'+name+'.svg').read_text('utf-8')
     result = QIcon()
-    for state, color in [(QIcon.Off, '#ffffff' if primary else '#006241'), (QIcon.On, '#ffffff')]:
-        data = svg.replace('currentColor',color)
-        renderer = QSvgRenderer(QByteArray(data.encode()))
-        for size in (20,40):
-            pixmap = QPixmap(size,size)
-            pixmap.fill(Qt.transparent)
-            painter = QPainter(pixmap)
-            renderer.render(painter)
-            painter.end()
-            result.addPixmap(pixmap,QIcon.Normal,state)
+    # SVG is the first source, so Qt selects its scalable SVG icon engine.
+    # Do not cap the source at 20/40 raster pixels on high-DPI whiteboards.
+    for state, color in [(QIcon.Off, 'white' if primary else 'green'), (QIcon.On, 'white')]:
+        result.addFile(str(resource(f'assets/icons/{color}/{name}.svg')), QSize(), QIcon.Normal, state)
     return result
 
 class ActionButton(QPushButton):
@@ -44,7 +36,7 @@ class ActionButton(QPushButton):
         self.setAccessibleName(text)
         key = '수업 녹화' if text.startswith('녹화 ') else text
         if key in ICONS:
-            self.setIcon(icon(ICONS[key], self.objectName() == 'primary'))
+            self.setIcon(icon(ICONS[key], self.objectName() == 'primary' or text.startswith('녹화 종료')))
 
 def button(text, callback, name=None, tip=None):
     b = ActionButton(text)

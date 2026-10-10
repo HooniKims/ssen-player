@@ -1,5 +1,7 @@
 param([string]$Iscc = '.tools/InnoSetup/ISCC.exe')
 $ErrorActionPreference = 'Stop'
+& .venv/Scripts/python.exe scripts/fetch_codecs.py
+if ($LASTEXITCODE -ne 0) { throw 'Codec download or verification failed' }
 & .venv/Scripts/python.exe -m unittest discover -s tests -v
 if ($LASTEXITCODE -ne 0) { throw 'Tests failed' }
 & .venv/Scripts/python.exe -m PyInstaller --noconfirm --workpath build/output SsenPlayer.spec

@@ -1,8 +1,10 @@
 # 배포와 업데이트
 
-소스 저장소는 `HooniKims/ssen-player` 비공개입니다. 설치 파일 공개 범위는 소스 공개 범위와 별개로 결정합니다. 현재 앱에는 배포 주소가 없으므로 업데이트 UI가 그 상태를 명시합니다.
+소스 저장소와 GitHub 릴리즈는 `HooniKims/ssen-player`에서 공개합니다. 현재 앱에는 자동 업데이트 피드 주소가 없으므로 업데이트 UI가 그 상태를 명시합니다.
 
 ## Windows 빌드
+
+빌드 전 `python scripts/fetch_codecs.py`로 `build/codecs.json`에 고정한 LGPL 재생 DLL을 내려받습니다. SHA-256 검증 후 `vendor/ffmpeg`에만 저장하며 시스템에는 설치하지 않습니다. PyInstaller는 Qt 기본 DLL 대신 이 파일들을 포함합니다. 완성된 `_internal/PySide6`의 5개 DLL 해시가 vendor 원본과 일치하는지 확인하고 AV1을 포함한 설치본 검사를 실행합니다.
 
 1. `app/__init__.py`와 `build/installer.iss`의 버전을 함께 변경합니다.
 2. `requirements-dev.txt` 설치 후 단위/재생/필기 테스트를 실행합니다.

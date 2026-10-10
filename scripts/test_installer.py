@@ -1,12 +1,20 @@
 """Install and uninstall only an isolated build inside this workspace."""
 import json
 import subprocess
+import winreg
 from pathlib import Path
 
 root = Path(__file__).resolve().parent.parent
 target = (root/'.tools/install-smoke').resolve()
 if root not in target.parents or target.name != 'install-smoke':
     raise RuntimeError('Unsafe installation test directory')
+try:
+    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Microsoft\Windows\CurrentVersion\Uninstall\{1459D467-38B3-4749-8E5B-30F20D09F772}_is1') as key:
+        installed = Path(winreg.QueryValueEx(key, 'InstallLocation')[0]).resolve()
+        if installed != target:
+            raise RuntimeError('An existing user installation must not be replaced by this test: '+str(installed))
+except FileNotFoundError:
+    pass
 installer = root/'artifacts/SsenPlayer-Setup-0.2.1.exe'
 output = root/'artifacts/qa/installed-0.2.1'
 output.mkdir(parents=True, exist_ok=True)
@@ -24,8 +32,8 @@ report = json.loads((output/'packaged.json').read_text('utf-8'))
 assert report['decoded'] and report['capture_with_ink']
 checked = []
 for media in sorted((root/'artifacts/test-media').glob('*')):
-    if media.suffix not in ('.mov','.mp4','.mkv','.avi','.webm') or media.stem == 'av1':
-        continue  # AV1 failure is explicitly recorded in VALIDATION-0.2.1.md.
+    if media.suffix not in ('.mov','.mp4','.mkv','.avi','.webm'):
+        continue
     destination = output/media.stem
     subprocess.run([str(exe),str(media),'--smoke-test-output',str(destination)],check=True,timeout=30)
     sample = json.loads((destination/'packaged.json').read_text('utf-8'))
