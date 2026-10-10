@@ -34,7 +34,7 @@ class Canvas(QGraphicsView):
         self.video = VideoItem()
         self.video.setSize(QSizeF(WIDTH, HEIGHT))
         self.scene().addItem(self.video)
-        self.setBackgroundBrush(QColor('#111d19'))
+        self.setBackgroundBrush(QColor('#fafbf8'))
         self.setFrameShape(QGraphicsView.NoFrame)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -57,6 +57,9 @@ class Canvas(QGraphicsView):
         super().resizeEvent(event)
         self.fitInView(self.sceneRect(), Qt.KeepAspectRatio)
 
+    def drawBackground(self, painter, rect):
+        painter.fillRect(rect, QColor('#111d19' if self.loaded else '#fafbf8'))
+
     def set_tool(self, tool):
         self.tool = tool
         self.viewport().setCursor(Qt.ArrowCursor if tool == 'pointer' else Qt.CrossCursor)
@@ -64,11 +67,11 @@ class Canvas(QGraphicsView):
     def drawForeground(self, painter, rect):
         painter.setRenderHint(QPainter.Antialiasing)
         if not self.loaded:
-            painter.setPen(QColor('#ecf1e8'))
+            painter.setPen(QColor('#006241'))
             painter.setFont(QFont('Ghanachocolate', 42))
             painter.drawText(QRectF(0, 370, WIDTH, 90), Qt.AlignCenter, '보고, 쓰고, 함께 배우다')
             painter.setFont(QFont('Malgun Gothic', 22))
-            painter.setPen(QColor('#a4b9ae'))
+            painter.setPen(QColor('#576d60'))
             painter.drawText(QRectF(0, 485, WIDTH, 65), Qt.AlignCenter, '영상을 끌어 놓거나  파일 열기 를 눌러주세요')
             painter.setFont(QFont('Malgun Gothic', 17))
             painter.drawText(QRectF(0, 572, WIDTH, 50), Qt.AlignCenter, 'MOV · MP4 · MKV · AVI · WebM')

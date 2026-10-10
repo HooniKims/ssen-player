@@ -12,16 +12,9 @@ from .ink import Ink
 from .subtitles import read_subtitles
 from . import VERSION
 from .classroom import ClassroomFeatures
+from .controls import button, icon_only
 
 MEDIA_FILTER = '동영상 (*.mov *.mp4 *.mkv *.avi *.webm *.m4v *.wmv *.flv *.ts *.mts *.m2ts *.mpg *.mpeg *.3gp);;오디오 (*.mp3 *.flac *.wav *.m4a *.ogg);;모든 파일 (*)'
-
-
-def button(text, callback, name=None, tip=None):
-    b = QPushButton(text)
-    b.clicked.connect(callback)
-    if name: b.setObjectName(name)
-    if tip: b.setToolTip(tip)
-    return b
 
 
 def stamp(ms):
@@ -127,10 +120,10 @@ class Player(ClassroomFeatures, QMainWindow):
         self.video_stack.addWidget(self.canvas)
         self.middle.addWidget(self.video_stack, 1)
         self.tools_scroll = QFrame(objectName='tools')
-        self.tools_scroll.setFixedWidth(156)
+        self.tools_scroll.setFixedWidth(216)
         panel_layout = QVBoxLayout(self.tools_scroll)
-        panel_layout.setContentsMargins(8, 8, 8, 8)
-        panel_layout.setSpacing(7)
+        panel_layout.setContentsMargins(14, 14, 14, 14)
+        panel_layout.setSpacing(8)
         options_scroll = QScrollArea()
         options_scroll.setWidgetResizable(True)
         options_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -138,25 +131,29 @@ class Player(ClassroomFeatures, QMainWindow):
         side = QVBoxLayout(self.tools)
         side.setContentsMargins(2, 4, 2, 4)
         side.setSpacing(7)
-        label = QLabel('수업 도구')
-        label.setAlignment(Qt.AlignCenter)
+        label = QLabel('수업 도구', objectName='section')
         side.addWidget(label)
         self.tool_group = QButtonGroup(self)
         self.tool_buttons = {}
+        tool_grid = QGridLayout()
+        tool_grid.setSpacing(6)
         for name, text, tip in [('pointer', '선택', '영상 터치로 재생 / 일시 정지 · V'), ('pen', '펜', '영상 위에 필기 · P'),
                                 ('marker', '형광펜', '반투명 굵은 필기'), ('eraser', '지우개', '닿은 획 지우기')]:
             b = button(text, lambda _, n=name: self.choose_tool(n), tip=tip)
             b.setCheckable(True)
+            b.setObjectName('tool')
             self.tool_group.addButton(b)
             self.tool_buttons[name] = b
-            side.addWidget(b)
+            index = len(self.tool_buttons)-1
+            tool_grid.addWidget(b,index//2,index%2)
+        side.addLayout(tool_grid)
         self.tool_buttons['pointer'].setChecked(True)
         colors = QGridLayout()
         colors.setSpacing(5)
         self.colors = QButtonGroup(self)
         for i, color in enumerate(['#ffdf59', '#ff6565', '#55d9fc', '#ffffff', '#59dd91', '#151f1a']):
             b = button('', lambda _, c=color: setattr(self.canvas, 'color', c), 'color', color)
-            b.setFixedSize(34, 34)
+            b.setFixedSize(44, 44)
             b.setAccessibleName('펜 색상 ' + color)
             b.setCheckable(True)
             b.setStyleSheet(f'QPushButton {{background:{color}; border:2px solid #c6d3cb;}} QPushButton:checked {{border:3px solid #00754a;}}')
@@ -169,18 +166,23 @@ class Player(ClassroomFeatures, QMainWindow):
         self.width_combo.setCurrentIndex(1)
         self.width_combo.currentIndexChanged.connect(lambda i: setattr(self.canvas, 'width', [3, 6, 12][i]))
         side.addWidget(self.width_combo)
-        side.addWidget(button('되돌리기', self.undo, tip='Ctrl+Z'))
-        side.addWidget(button('다시 실행', self.redo, tip='Ctrl+Y'))
-        side.addWidget(button('모두 지우기', self.clear_ink, tip='되돌리기로 복원할 수 있습니다'))
+        edits = QHBoxLayout()
+        edits.addWidget(icon_only(button('되돌리기', self.undo, tip='되돌리기 · Ctrl+Z')))
+        edits.addWidget(icon_only(button('다시 실행', self.redo, tip='다시 실행 · Ctrl+Y')))
+        edits.addWidget(icon_only(button('모두 지우기', self.clear_ink, tip='모두 지우기 · 되돌리기로 복원 가능')))
+        side.addLayout(edits)
         side.addStretch()
         options_scroll.setWidget(self.tools)
         panel_layout.addWidget(options_scroll, 1)
         side = panel_layout
         self.capture_button = button('캡처 저장', self.capture, 'primary', '영상 + 필기를 PNG로 저장 · Ctrl+S')
         side.addWidget(self.capture_button)
-        side.addWidget(button('저장 폴더', self.open_capture_dir))
+        utilities = QHBoxLayout()
+        utilities.setSpacing(6)
+        utilities.addWidget(icon_only(button('저장 폴더', self.open_capture_dir)))
         self.full_button = button('전체 화면', self.cycle_fullscreen, tip='F11 · 수업 화면 → 완전 화면 → 창 모드')
-        side.addWidget(self.full_button)
+        utilities.addWidget(self.full_button, 1)
+        side.addLayout(utilities)
         self.window_button = button('창 모드', lambda: self.set_mode('window'))
         self.window_button.hide()
         side.addWidget(self.window_button)
@@ -201,13 +203,13 @@ class Player(ClassroomFeatures, QMainWindow):
         foot.addLayout(track)
         controls = QHBoxLayout()
         controls.setSpacing(8)
-        controls.addWidget(button('이전', lambda: self.next_file(-1)))
+        controls.addWidget(icon_only(button('이전', lambda: self.next_file(-1))))
         controls.addWidget(button('−5초', lambda: self.jump(-5000)))
         self.play_button = button('재생', self.toggle, 'primary', 'Space')
         self.play_button.setMinimumWidth(70)
         controls.addWidget(self.play_button)
         controls.addWidget(button('+5초', lambda: self.jump(5000)))
-        controls.addWidget(button('다음', lambda: self.next_file(1)))
+        controls.addWidget(icon_only(button('다음', lambda: self.next_file(1))))
         self.speed = QComboBox()
         self.speed.addItems(['0.5×', '0.75×', '1.0×', '1.25×', '1.5×', '2.0×'])
         self.speed.setCurrentIndex(2)

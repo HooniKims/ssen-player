@@ -6,6 +6,7 @@ from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (QDialog,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QLineEdit,
     QDoubleSpinBox,QListWidget,QCheckBox,QMessageBox)
 from .ink import Ink
+from .controls import button
 
 
 class ClassroomFeatures:
@@ -25,9 +26,7 @@ class ClassroomFeatures:
 
     @staticmethod
     def make_button(text, callback):
-        button = QPushButton(text)
-        button.clicked.connect(callback)
-        return button
+        return button(text, callback)
 
     def capture_image(self):
         return self.youtube.capture() if self.source_kind == 'youtube' else self.canvas.capture()

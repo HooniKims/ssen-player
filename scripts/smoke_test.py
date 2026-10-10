@@ -59,7 +59,7 @@ assert window.media.position() > before, 'Drawing paused playback'
 window.capture()
 wait_until(lambda: not window.jobs)
 assert '완료' in window.status.text(), window.status.text()
-capture = sorted((out/'captures').glob('*.png'))[-1]
+capture = max((out/'captures').glob('*.png'), key=lambda path:path.stat().st_mtime_ns)
 image = QImage(str(capture))
 assert image.width() == 1920 and image.height() == 1080
 color = image.pixelColor(900, 500)

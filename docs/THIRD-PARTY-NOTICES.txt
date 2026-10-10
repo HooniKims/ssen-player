@@ -1,4 +1,4 @@
-쎈player 0.2.0
+쎈player 0.2.1
 
 PySide6 / Shiboken6 / Qt 6.10.2 — The Qt Company Ltd. and contributors.
 Used under LGPL-3.0. Qt libraries remain separate, dynamically loaded DLLs.
@@ -58,3 +58,7 @@ https://github.com/yt-dlp/ejs/tree/0.8.0
 QuickJS-NG 0.17.0 (MIT), bundled upstream Windows x86_64 qjs.exe.
 https://github.com/quickjs-ng/quickjs/releases/tag/v0.17.0
 SHA256: 2AEABF0092C3262D6B2609824418F7DD7ED1F1DF939F73B2B15645230CAC0D77
+
+Phosphor Icons (MIT), official regular SVG assets.
+https://github.com/phosphor-icons/core/tree/2b75f3ad12b420c9504ef05df8d2564a28f8500e
+See assets/licenses/Phosphor-MIT.txt.

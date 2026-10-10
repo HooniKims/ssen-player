@@ -62,3 +62,4 @@ if window.youtube.state.get('ready'): window.capture_image().save(str(out/'youtu
 print(json.dumps(report,ensure_ascii=False,indent=2))
 window.close()
 app.processEvents()
+assert report.get('youtube_loop') and report.get('youtube_recording'), report
