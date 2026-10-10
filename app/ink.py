@@ -1,5 +1,5 @@
 """Scene-coordinate ink: the same paths are used on screen and in captures."""
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from PySide6.QtCore import QPointF, Qt
 from PySide6.QtGui import QColor, QPainterPath, QPainterPathStroker, QPen
 
@@ -10,6 +10,7 @@ class Stroke:
     width: float
     marker: bool = False
     points: list = field(default_factory=list)
+    outline: object = field(default=None, repr=False)
     _cached_path: object = field(default=None, init=False, repr=False)
     _cached_count: int = field(default=0, init=False, repr=False)
 
@@ -40,10 +41,23 @@ class Stroke:
         return QPen(color, self.width, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
 
     def hits(self, point, radius=14):
+        if self.outline is not None:
+            area = QPainterPath()
+            area.addEllipse(point, radius, radius)
+            return self.outline.intersects(area)
         stroker = QPainterPathStroker()
         stroker.setWidth(self.width + radius * 2)
         stroker.setCapStyle(Qt.RoundCap)
         return stroker.createStroke(self.path()).contains(point)
+
+    def shape(self):
+        if self.outline is not None:
+            return self.outline
+        stroker = QPainterPathStroker()
+        stroker.setWidth(self.width)
+        stroker.setCapStyle(Qt.RoundCap)
+        stroker.setJoinStyle(Qt.RoundJoin)
+        return stroker.createStroke(self.path())
 
 
 class Ink:
@@ -72,7 +86,34 @@ class Ink:
             self.checkpoint()
             self.strokes = []
 
+    def erase_area(self, start, end, radius):
+        # A swept circle covers the gaps between sparse touch/tablet events.
+        area = QPainterPath()
+        if start == end:
+            area.addEllipse(end, radius, radius)
+        else:
+            line = QPainterPath(start)
+            line.lineTo(end)
+            stroker = QPainterPathStroker()
+            stroker.setWidth(radius * 2)
+            stroker.setCapStyle(Qt.RoundCap)
+            area = stroker.createStroke(line)
+        remaining = []
+        for stroke in self.strokes:
+            shape = stroke.shape()
+            if not shape.intersects(area):
+                remaining.append(stroke)
+                continue
+            shape = shape.subtracted(area)
+            if not shape.isEmpty():
+                # Replace rather than mutate: history retains the original shape.
+                remaining.append(replace(stroke, outline=shape))
+        self.strokes = remaining
+
     def paint(self, painter):
         for stroke in self.strokes:
-            painter.setPen(stroke.pen())
-            painter.drawPath(stroke.path())
+            if stroke.outline is not None:
+                painter.fillPath(stroke.outline, stroke.pen().color())
+            else:
+                painter.setPen(stroke.pen())
+                painter.drawPath(stroke.path())

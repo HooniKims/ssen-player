@@ -47,6 +47,8 @@ class Canvas(QGraphicsView):
         self.tool = 'pointer'
         self.color = '#ffdf59'
         self.width = 6
+        self.eraser_radius = 24
+        self.erase_last = None
         self.drawing = False
         self.loaded = False
         self.subtitle = ''
@@ -96,8 +98,9 @@ class Canvas(QGraphicsView):
         if self.tool == 'pointer' or not self.sceneRect().contains(point):
             return
         self.drawing = True
+        self.erase_last = point
         self.ink.checkpoint()
-        if self.tool != 'eraser':
+        if self.tool not in ('eraser', 'area_eraser'):
             self.ink.strokes.append(Stroke(self.color, self.width * (4 if self.tool == 'marker' else 1), self.tool == 'marker'))
         self.move(point)
 
@@ -105,7 +108,10 @@ class Canvas(QGraphicsView):
         if not self.drawing:
             return
         point = QPointF(max(0, min(WIDTH, point.x())), max(0, min(HEIGHT, point.y())))
-        if self.tool == 'eraser':
+        if self.tool == 'area_eraser':
+            self.ink.erase_area(self.erase_last, point, self.eraser_radius)
+            self.erase_last = point
+        elif self.tool == 'eraser':
             self.ink.strokes = [s for s in self.ink.strokes if not s.hits(point)]
         elif self.ink.strokes:
             self.ink.strokes[-1].add_point((point.x(), point.y()))

@@ -144,14 +144,15 @@ class Player(ClassroomFeatures, QMainWindow):
         tool_grid = QGridLayout()
         tool_grid.setSpacing(6)
         for name, text, tip in [('pointer', '선택', '영상 터치로 재생 / 일시 정지 · V'), ('pen', '펜', '영상 위에 필기 · P'),
-                                ('marker', '형광펜', '반투명한 굵은 선으로 필기'), ('eraser', '지우개', '닿은 획 지우기')]:
+                                ('marker', '형광펜', '반투명한 굵은 선으로 필기'), ('eraser', '획 지우개', '닿은 획 전체 지우기'),
+                                ('area_eraser', '부분 지우개', '문지른 부분만 지우기')]:
             b = button(text, lambda _, n=name: self.choose_tool(n), tip=tip)
             b.setCheckable(True)
             b.setObjectName('tool')
             self.tool_group.addButton(b)
             self.tool_buttons[name] = b
             index = len(self.tool_buttons)-1
-            tool_grid.addWidget(b,index//2,index%2)
+            tool_grid.addWidget(b,index//2,index%2,1,2 if name == 'area_eraser' else 1)
         side.addLayout(tool_grid)
         self.tool_buttons['pointer'].setChecked(True)
         colors = QGridLayout()
@@ -172,6 +173,13 @@ class Player(ClassroomFeatures, QMainWindow):
         self.width_combo.setCurrentIndex(1)
         self.width_combo.currentIndexChanged.connect(lambda i: setattr(self.canvas, 'width', [3, 6, 12][i]))
         side.addWidget(self.width_combo)
+        self.eraser_size = QComboBox()
+        self.eraser_size.addItems(['작은 지우개', '중간 지우개', '큰 지우개'])
+        self.eraser_size.setCurrentIndex(1)
+        self.eraser_size.setAccessibleName('부분 지우개 크기')
+        self.eraser_size.currentIndexChanged.connect(lambda i: setattr(self.canvas, 'eraser_radius', [12, 24, 48][i]))
+        self.eraser_size.hide()
+        side.addWidget(self.eraser_size)
         edits = QHBoxLayout()
         edits.addWidget(icon_only(button('되돌리기', self.undo, tip='되돌리기 · Ctrl+Z')))
         edits.addWidget(icon_only(button('다시 실행', self.redo, tip='다시 실행 · Ctrl+Y')))
@@ -380,6 +388,8 @@ class Player(ClassroomFeatures, QMainWindow):
     def choose_tool(self, name):
         self.canvas.set_tool(name)
         self.tool_buttons[name].setChecked(True)
+        self.eraser_size.setVisible(name == 'area_eraser')
+        self.width_combo.setVisible(name not in ('eraser', 'area_eraser'))
         if self.youtube: self.youtube.sync_tool()
 
     def undo(self):
