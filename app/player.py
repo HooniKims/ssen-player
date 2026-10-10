@@ -143,6 +143,8 @@ class Player(ClassroomFeatures, QMainWindow):
         self.tool_buttons = {}
         tool_grid = QGridLayout()
         tool_grid.setSpacing(6)
+        tool_grid.setColumnStretch(0, 1)
+        tool_grid.setColumnStretch(1, 1)
         for name, text, tip in [('pointer', '선택', '영상 터치로 재생 / 일시 정지 · V'), ('pen', '펜', '영상 위에 필기 · P'),
                                 ('marker', '형광펜', '반투명한 굵은 선으로 필기'), ('eraser', '획 지우개', '닿은 획 전체 지우기'),
                                 ('area_eraser', '부분 지우개', '문지른 부분만 지우기')]:
@@ -152,7 +154,10 @@ class Player(ClassroomFeatures, QMainWindow):
             self.tool_group.addButton(b)
             self.tool_buttons[name] = b
             index = len(self.tool_buttons)-1
-            tool_grid.addWidget(b,index//2,index%2,1,2 if name == 'area_eraser' else 1)
+            if name == 'pointer':
+                tool_grid.addWidget(b, 0, 0, 1, 2)
+            else:
+                tool_grid.addWidget(b, 1 + (index-1)//2, (index-1)%2)
         side.addLayout(tool_grid)
         self.tool_buttons['pointer'].setChecked(True)
         colors = QGridLayout()
