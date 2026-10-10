@@ -14,6 +14,40 @@
 
 AV1·H.264·HEVC·VP9·ProRes 등의 재생 코덱을 포함하며 별도 코덱 팩이나 Python 설치가 필요 없습니다. 영상 위 필기, 필기 포함 PNG 캡처·MP4 녹화, 구간 반복과 원본 구간 MP4 저장을 지원합니다.
 
+## 화면으로 보는 변경 사항
+
+실제 v0.2.2 앱을 150% 배율로 캡처했습니다. 화면의 저장 경로는 설명용 예시이며, 저장할 폴더는 설정에서 고를 수 있습니다.
+
+| 이전 표현 | 바뀐 표현 | 의미 |
+| --- | --- | --- |
+| 이 구간 기억하기 | 구간 목록에 저장 | 영상 파일이 아니라 시작·끝 위치를 기억합니다. |
+| 캡처 저장 폴더 | 캡처·녹화·구간 저장 폴더 | 캡처와 두 종류의 MP4를 같은 폴더에 저장합니다. |
+| B 지점은 A 지점보다… | 끝 지점은 시작 지점보다… | 반복 구간을 정할 때 시작과 끝을 구분합니다. |
+
+### 구간 목록 저장과 MP4 저장
+
+시작과 끝을 정하고 **반복 재생**을 누르면 해당 구간을 반복합니다. **구간 목록에 저장**은 다음에도 같은 구간을 불러오는 기능입니다. 영상 파일이 필요하면 아래의 **이 구간을 MP4로 저장 · 필기 제외**를 누릅니다. 필기까지 저장하려면 수업 녹화를 사용하세요.
+
+<img src="https://raw.githubusercontent.com/HooniKims/ssen-player/ff517b248fdc13749ae7b74be0a258dcf12b82ca/docs/images/release-0.2.2/segments.png" alt="구간 목록에 저장 버튼과 필기를 제외한 MP4 저장 버튼이 구분된 구간 설정 화면" width="540">
+
+### 캡처·녹화·구간 파일의 저장 폴더
+
+**저장 폴더 변경**에서 캡처 PNG, 수업 녹화 MP4, 구간 MP4를 저장할 위치를 고릅니다. 기존의 ‘캡처 저장 폴더’라는 이름을 실제 저장 범위에 맞게 바꿨습니다.
+
+<img src="https://raw.githubusercontent.com/HooniKims/ssen-player/ff517b248fdc13749ae7b74be0a258dcf12b82ca/docs/images/release-0.2.2/settings.png" alt="캡처·녹화·구간 저장 폴더를 안내하는 설정 화면" width="540">
+
+### 영상과 필기하는 과정을 함께 녹화
+
+수업 녹화는 영상과 필기 과정을 **720p·20fps MP4**로 저장합니다. 도구 모음은 녹화에서 제외합니다. PC 소리를 포함하면 다른 앱의 소리도 함께 녹음되며, 교사 설명을 넣으려면 기본 마이크 소리 포함을 선택합니다.
+
+<img src="https://raw.githubusercontent.com/HooniKims/ssen-player/ff517b248fdc13749ae7b74be0a258dcf12b82ca/docs/images/release-0.2.2/recording.png" alt="영상과 필기 과정 녹화, PC 소리와 마이크 선택을 안내하는 수업 녹화 화면" width="540">
+
+### YouTube 재생 조건과 광고 차단 안내
+
+‘임베드’라는 용어를 **앱 안에서 재생하도록 허용된 영상**으로 풀었습니다. 광고 차단이 모든 광고를 없애지는 못한다는 점과, 재생 오류가 날 때 끄고 다시 시도할 설정도 명시했습니다.
+
+<img src="https://raw.githubusercontent.com/HooniKims/ssen-player/ff517b248fdc13749ae7b74be0a258dcf12b82ca/docs/images/release-0.2.2/youtube.png" alt="YouTube 재생 허용 조건과 광고 차단 한계를 설명하는 영상 열기 화면" width="540">
+
 ## 확인한 범위
 
 `humanize-korean`과 `review-ai-expressions`로 문구를 검토했습니다. 문자 기준 변경률은 3.9%이며 수치·파일명·기능 조건을 유지했습니다. 재생·저장 로직은 변경하지 않았습니다.
