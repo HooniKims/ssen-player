@@ -12,7 +12,7 @@ from cryptography.exceptions import InvalidSignature
 from PySide6.QtCore import QPointF
 from app.ink import Ink, Stroke
 from app.subtitles import read_subtitles
-from app.updater import canonical, verify_manifest, version_tuple, https_url, download
+from app.updater import canonical, verify_manifest, version_tuple, https_url, download, newer_release
 
 
 class CoreTests(unittest.TestCase):
@@ -67,6 +67,21 @@ class CoreTests(unittest.TestCase):
         finally: path.unlink()
         with patch('urllib.request.urlopen', return_value=Response(b'corrupted')):
             with self.assertRaises(ValueError): download(payload)
+
+    def test_startup_check_follows_github_release_redirect(self):
+        key = Ed25519PrivateKey.generate()
+        public = base64.b64encode(key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)).decode()
+        config = dict(feed_url='https://github.com/o/r/releases/latest/download/update.json', public_key=public)
+        def feed(version):
+            payload = dict(version=version, url='https://github.com/o/r/releases/download/v1/setup.exe', size=1, sha256='a'*64)
+            class Response(io.BytesIO):
+                url = 'https://release-assets.githubusercontent.com/update.json'
+            body = json.dumps(dict(payload=payload, signature=base64.b64encode(key.sign(canonical(payload))).decode()))
+            return Response(body.encode())
+        with patch('urllib.request.urlopen', return_value=feed('99.0.0')):
+            self.assertEqual(newer_release(config)['version'], '99.0.0')
+        with patch('urllib.request.urlopen', return_value=feed('0.0.1')):
+            self.assertIsNone(newer_release(config))
 
 
 if __name__ == '__main__': unittest.main()

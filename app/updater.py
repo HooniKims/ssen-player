@@ -77,6 +77,26 @@ def download(payload):
     return str(path)
 
 
+def load_config():
+    base = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parent.parent))
+    try: return json.loads((base/'build/update.json').read_text('utf-8'))
+    except (OSError, ValueError): return {}
+
+
+def newer_release(config):
+    payload = fetch_manifest(config['feed_url'], config['public_key'])
+    return payload if version_tuple(payload['version']) > version_tuple(VERSION) else None
+
+
+def check_in_background(window):
+    # Ask on every launch until installed; "다음에" simply waits for the next start.
+    config = load_config()
+    if not config.get('feed_url') or not config.get('public_key'): return
+    window.update_task = Task(lambda: newer_release(config))
+    window.update_task.signals.done.connect(window.update_checked)
+    QThreadPool.globalInstance().start(window.update_task)
+
+
 class Result(QObject):
     done = Signal(object, str)
 
@@ -93,16 +113,14 @@ class Task(QRunnable):
 
 
 class UpdateDialog(QDialog):
-    def __init__(self, parent):
+    def __init__(self, parent, payload=None):
         super().__init__(parent)
         self.setWindowTitle('쎈player 업데이트')
         self.setMinimumWidth(460)
         self.busy = False
         self.payload = None
         self.installer = None
-        base = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parent.parent))
-        try: self.config = json.loads((base/'build/update.json').read_text('utf-8'))
-        except (OSError, ValueError): self.config = {}
+        self.config = load_config()
         layout = QVBoxLayout(self)
         layout.setSpacing(15)
         layout.setContentsMargins(25, 25, 25, 25)
@@ -113,10 +131,14 @@ class UpdateDialog(QDialog):
         self.action = QPushButton('새 버전 확인')
         self.action.clicked.connect(self.act)
         layout.addWidget(self.action)
-        close = QPushButton('닫기')
+        close = QPushButton('다음에' if payload else '닫기')
         close.clicked.connect(self.reject)
         layout.addWidget(close)
-        if not self.config.get('feed_url') or not self.config.get('public_key'):
+        if payload:
+            self.payload = payload
+            self.message.setText(f"새 버전 {payload['version']}이 나왔습니다. 지금 업데이트할까요?\n'다음에'를 누르면 다음 실행 때 다시 알려 드립니다.")
+            self.action.setText('지금 업데이트')
+        elif not self.config.get('feed_url') or not self.config.get('public_key'):
             self.message.setText('이 버전은 업데이트 배포 주소가 설정되지 않아 앱 안에서 업데이트할 수 없습니다.\n배포 주소를 설정한 버전부터 앱 안에서 업데이트할 수 있습니다.')
             self.action.setEnabled(False)
 

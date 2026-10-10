@@ -1,6 +1,6 @@
 # 배포와 업데이트
 
-소스 저장소와 GitHub 릴리즈는 `HooniKims/ssen-player`에서 공개합니다. 현재 앱에는 자동 업데이트 피드 주소가 없으므로 업데이트 UI가 그 상태를 명시합니다.
+소스 저장소와 GitHub 릴리즈는 `HooniKims/ssen-player`에서 공개합니다. 0.2.3부터 앱은 GitHub 릴리즈에서 새 버전을 확인합니다.
 
 ## Windows 빌드
 
@@ -12,24 +12,27 @@
 4. 실제 패키징 앱의 `--smoke-test-output` 검사와 설치/업데이트 검사를 수행합니다.
 5. 앱 코드와 설치 파일은 배포용 Authenticode 인증서가 준비되면 서명합니다. 업데이트 매니페스트의 Ed25519 서명과 Windows 코드 서명은 서로 다릅니다.
 
-## HTTPS 업데이트 피드
+## GitHub 릴리즈 업데이트
 
-앱에는 GitHub 개인 액세스 토큰을 넣지 않습니다. 일반 사용자 자동 업데이트에는 접근 가능한 HTTPS 피드 및 설치 파일 주소가 필요합니다. 비공개 설치 파일까지 요구된다면 별도의 사용자 인증 배포 서비스가 필요합니다.
+앱은 실행 3초 뒤 `build/update.json`의 `feed_url`, 곧 `https://github.com/HooniKims/ssen-player/releases/latest/download/update.json`을 확인합니다. 새 버전이 있으면 "지금 업데이트 / 다음에"를 묻고, "다음에"를 고르면 다음 실행 때 다시 묻습니다. 수업 전체 화면이나 녹화 중에는 창을 띄우지 않고 상태 줄에만 알립니다. 인터넷이 없거나 확인에 실패하면 아무것도 표시하지 않습니다.
 
-1. 외부 보관 위치에서 Ed25519 키 쌍을 생성합니다. 개인키는 저장소 및 앱 번들에 넣지 않습니다.
-2. `build/update.json`에 `feed_url`과 원시 32바이트 공개키의 Base64 값 `public_key`를 설정한 뒤 빌드합니다.
-3. 설치 파일을 배포 서버에 올린 뒤 다음 스크립트로 매니페스트를 서명합니다.
+`update.json`은 Ed25519로 서명합니다. 앱에는 공개키만 들어 있고, 개인키는 저장소 밖 `%USERPROFILE%\.ssen-player\update-signing-key.pem`에 둡니다. **개인키를 잃으면 이미 설치된 앱에 업데이트를 보낼 수 없으므로 따로 백업합니다.** 앱에는 GitHub 토큰을 넣지 않습니다.
+
+1. 설치 파일을 빌드한 뒤 매니페스트에 서명합니다. `--url`은 해당 릴리즈 태그의 설치 파일 주소입니다.
 
 ```powershell
 .venv/Scripts/python.exe scripts/sign_release.py `
-  --key '<저장소 밖 개인키.pem>' `
-  --installer artifacts/SsenPlayer-Setup-0.2.0.exe `
-  --url 'https://배포호스트/SsenPlayer-Setup-0.2.0.exe' `
-  --version 0.2.0 --output artifacts/update.json
+  --key "$env:USERPROFILE/.ssen-player/update-signing-key.pem" `
+  --installer artifacts/SsenPlayer-Setup-0.2.3.exe `
+  --url 'https://github.com/HooniKims/ssen-player/releases/download/v0.2.3/SsenPlayer-Setup-0.2.3.exe' `
+  --version 0.2.3 --output artifacts/update.json
 ```
 
-4. 생성된 매니페스트를 `feed_url` 주소에 배포합니다. 버전, URL, 파일 크기, SHA-256 모두 서명에 포함됩니다.
-5. 앱은 새 버전만 안내하고, 사용자가 다운로드와 설치를 각각 선택합니다. 재생 위치·음량·캡처 폴더는 `HKCU/Software/HooniKim/SsenPlayer`에 보관되어 설치 디렉터리 교체와 분리됩니다.
+2. GitHub 릴리즈 `v0.2.3`에 설치 파일, 포터블 ZIP, `artifacts/update.json`을 함께 올립니다. 파일 이름은 반드시 `update.json`이어야 합니다.
+3. 초안이나 시험판이 아닌 정식 릴리즈로 게시합니다. `latest` 주소는 정식 릴리즈만 가리킵니다.
+4. 앱은 서명, 버전, URL, 파일 크기, SHA-256을 모두 확인한 뒤 설치합니다. 재생 위치·음량·캡처 폴더는 `HKCU/Software/HooniKim/SsenPlayer`에 저장되므로 설치 폴더가 바뀌어도 유지됩니다.
+
+0.2.2 이하에는 업데이트 주소가 없어서 0.2.3은 한 번 직접 내려받아 설치해야 합니다.
 
 ## 배포 전 확인
 

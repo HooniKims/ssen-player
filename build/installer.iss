@@ -1,4 +1,4 @@
-#define AppVersion "0.2.2"
+#define AppVersion "0.2.3"
 [Setup]
 AppId={{1459D467-38B3-4749-8E5B-30F20D09F772}
 AppName=쎈player

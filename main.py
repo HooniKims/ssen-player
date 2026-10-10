@@ -47,6 +47,12 @@ def main():
     if features:
         from app.feature_diagnostics import run
         run(application, window, Path(features))
+    if not diagnostics and not features:
+        from PySide6.QtCore import QTimer
+        def check_update():
+            from app.updater import check_in_background
+            check_in_background(window)
+        QTimer.singleShot(3000, check_update)
     return application.exec()
 
 if __name__ == '__main__':

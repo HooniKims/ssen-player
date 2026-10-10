@@ -659,6 +659,15 @@ class Player(ClassroomFeatures, QMainWindow):
                 self.notify('자막을 불러왔습니다: ' + Path(path).name)
             except Exception as error: self.notify(str(error))
 
+    def update_checked(self, payload, error):
+        self.update_task = None
+        if error or not payload: return  # Offline or nothing new: stay silent at startup.
+        if self.mode != 'window' or self.recorder.active or self.recorder.finalizing:
+            self.notify(f"새 버전 {payload['version']}이 나왔습니다. 설정 → 업데이트 확인에서 설치할 수 있습니다.")
+            return
+        from .updater import UpdateDialog
+        UpdateDialog(self, payload).exec()
+
     def check_update(self):
         from .updater import UpdateDialog
         UpdateDialog(self).exec()
