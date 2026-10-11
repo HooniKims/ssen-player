@@ -22,12 +22,12 @@
 
 ```powershell
 .venv/Scripts/python.exe scripts/sign_release.py `
-  --installer artifacts/SsenPlayer-Setup-0.2.4.exe `
-  --url 'https://github.com/HooniKims/ssen-player/releases/download/v0.2.4/SsenPlayer-Setup-0.2.4.exe' `
-  --version 0.2.4 --output artifacts/update.json
+  --installer artifacts/SsenPlayer-Setup-1.0.0.exe `
+  --url 'https://github.com/HooniKims/ssen-player/releases/download/v1.0.0/SsenPlayer-Setup-1.0.0.exe' `
+  --version 1.0.0 --output artifacts/update.json
 ```
 
-2. GitHub 릴리즈 `v0.2.4`에 설치 파일, 포터블 ZIP, `artifacts/update.json`을 함께 올립니다. 파일 이름은 반드시 `update.json`이어야 합니다.
+2. GitHub 릴리즈 `v1.0.0`에 설치 파일, 포터블 ZIP, `artifacts/update.json`을 함께 올립니다. 파일 이름은 반드시 `update.json`이어야 합니다.
 3. 초안이나 시험판이 아닌 정식 릴리즈로 게시합니다. `latest` 주소는 정식 릴리즈만 가리킵니다.
 4. 재생 위치·음량·캡처 폴더는 `HKCU/Software/HooniKim/SsenPlayer`에 저장되므로 업데이트 뒤에도 그대로 남습니다.
 

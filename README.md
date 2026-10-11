@@ -2,7 +2,7 @@
 
 Windows 수업용 영상 플레이어. 로컬 재생에는 광고가 없습니다. MOV를 재생하면서 영상 위에 쓰고, 영상과 필기를 PNG·MP4로 저장합니다. 쎈Lite·쎈Pick의 초록색과 따뜻한 중립색 디자인을 이어갑니다.
 
-현재 버전: **0.2.4 프로토타입**. Windows x64, Python 3.12 / PySide6 6.10.2 / Qt FFmpeg backend. 사용자 PC에는 Python이나 별도 코덱 팩을 설치할 필요가 없습니다.
+현재 버전: **1.0.0**. Windows x64, Python 3.12 / PySide6 6.10.2 / Qt FFmpeg backend. 사용자 PC에는 Python이나 별도 코덱 팩을 설치할 필요가 없습니다.
 
 **[설치 파일 다운로드 및 버전 설명](https://github.com/HooniKims/ssen-player/releases/latest)** · 설치 EXE 또는 압축을 풀어 실행하는 포터블 ZIP을 제공합니다.
 
@@ -14,7 +14,7 @@ Windows 수업용 영상 플레이어. 로컬 재생에는 광고가 없습니�
 
 ## 사용
 
-1. 설치형 `SsenPlayer-Setup-0.2.4.exe`를 실행하거나, 개발 빌드의 `dist/SsenPlayer/SsenPlayer.exe`를 실행합니다. 실행 파일만 따로 옮기지 말고 `_internal` 폴더도 함께 유지합니다.
+1. 설치형 `SsenPlayer-Setup-1.0.0.exe`를 실행하거나, 개발 빌드의 `dist/SsenPlayer/SsenPlayer.exe`를 실행합니다. 실행 파일만 따로 옮기지 말고 `_internal` 폴더도 함께 유지합니다.
 2. **파일 열기** 또는 드래그 앤 드롭으로 영상을 엽니다. 여러 파일은 재생 목록에 추가됩니다.
 3. 우측의 **펜 / 형광펜 / 지우개**를 선택합니다. 영상이 재생 중이거나 일시 정지된 상태에서 모두 쓸 수 있습니다.
 4. **캡처 저장**을 누르면 현재 영상 프레임 + 표시 중인 자막 + 필기가 1920×1080 PNG로 저장됩니다. 여백에 쓴 필기도 포함하고 도구 모음은 제외합니다.
