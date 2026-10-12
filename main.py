@@ -4,6 +4,7 @@ import time
 from pathlib import Path
 
 os.environ['QT_MEDIA_BACKEND'] = 'ffmpeg'
+BUILD_TAG = '8574db8adac9'
 STARTED = time.perf_counter()
 
 def main():

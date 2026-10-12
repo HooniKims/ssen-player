@@ -11,3 +11,9 @@ vendor/
 _workspace/
 *.pem
 *.key
+
+/docs/provenance.md
+/공통-새앱-이용약관-표식-적용.md
+/쎈player-이용약관-표식-적용.md
+/build/LICENSE.txt
+/build/version-info.txt

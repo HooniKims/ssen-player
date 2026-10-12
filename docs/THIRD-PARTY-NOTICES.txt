@@ -1,4 +1,6 @@
-쎈player 0.2.2
+이 앱 자체 코드는 LICENSE(이용약관)를 따르며, 아래 구성 요소는 각자의 라이선스를 따릅니다.
+
+쎈player 1.0.0
 
 PySide6 / Shiboken6 / Qt 6.10.2 — The Qt Company Ltd. and contributors.
 Used under LGPL-3.0. Qt libraries remain separate, dynamically loaded DLLs.

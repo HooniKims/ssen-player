@@ -1,0 +1,43 @@
+쎈player 이용약관 (최종 사용자 사용 허락 계약)
+
+Copyright (c) 2026 상명초 김승현, 등촌중 김형훈. All rights reserved.
+쎈player(SsenPlayer)는 저작권법의 보호를 받는 프로그램입니다. 이 약관에 따라 사용을 허락할 뿐, 프로그램의 소유권이나 저작권을 넘기지 않습니다.
+
+제1조 (적용 범위)
+1. 이 약관은 쎈player 1.0.0 및 그 이후 버전의 설치 파일, 업데이트 파일, 프로그램 코드, 화면 디자인, 이름·로고(이하 "프로그램")에 적용됩니다.
+2. 프로그램에 함께 들어 있는 오픈소스 구성 요소(Python, PySide6/Qt, FFmpeg, dav1d, yt-dlp 등)는 각 구성 요소의 라이선스가 우선 적용됩니다. 목록과 라이선스 원문은 docs/THIRD-PARTY-NOTICES.txt 및 assets/licenses에 있습니다. 이 약관은 그 라이선스가 허락하는 권리를 제한하지 않습니다.
+
+제2조 (사용 허락)
+1. 저작권자는 이용자가 공식 배포처(https://github.com/HooniKims/ssen-player/releases)에서 받은 프로그램을 자신의 PC에 설치하여, 교육 및 업무 목적으로 사용하는 것을 허락합니다.
+2. 이 허락은 양도하거나 다른 사람에게 다시 허락할 수 없습니다.
+
+제3조 (금지 행위)
+이용자는 저작권자의 서면 허락 없이 다음 행위를 할 수 없습니다.
+1. 프로그램을 복제하여 공식 배포처가 아닌 곳(웹하드, 메신저 단체방, 다른 저장소 등)에 올리거나 배포·판매·대여하는 행위. 다만 공식 배포처 주소를 안내하는 것은 허용합니다.
+2. 프로그램의 코드·화면 디자인·이름·로고를 수정하거나, 이를 바탕으로 같거나 비슷한 프로그램을 만드는 행위.
+3. 프로그램을 역설계·역컴파일·분해하거나, 설치 파일·프로그램 파일을 인공지능 서비스(채팅형 AI, 코드 생성 도구 등)에 올려 구조를 분석하게 하거나 비슷한 프로그램을 만들게 하는 행위. 다만 저작권법이 허용하는 범위(예: 호환에 필요한 정보를 얻기 위한 프로그램코드 역분석)는 예외로 합니다.
+4. 업데이트 파일의 크기·SHA-256 검증 등 보호 장치를 우회하거나 무력화하는 행위.
+5. 프로그램에 표시된 저작권·이용약관 표시를 지우거나 바꾸는 행위.
+
+제4조 (이용자의 파일과 개인정보)
+1. 이용자가 프로그램으로 여는 로컬 동영상·오디오·자막 파일은 이용자의 PC 안에서만 처리되며, 저작권자에게 전송되지 않습니다.
+2. 업데이트 확인 때는 GitHub의 공식 배포처에서 버전 정보를 받아 옵니다. 업데이트를 선택하면 설치 파일을 내려받으며, 이 과정에서 접속 정보가 GitHub에 전달됩니다.
+3. YouTube 검색·재생·구간 저장을 사용할 때는 검색어·영상 주소와 접속 정보가 YouTube 및 관련 서비스에 전달됩니다. 로컬 동영상·자막·필기·캡처·녹화 파일을 저작권자에게 전송하지 않습니다.
+
+제5조 (업데이트)
+저작권자는 기능 개선과 오류 수정을 위해 업데이트를 제공할 수 있으며, 업데이트에도 이 약관(또는 그때의 새 약관)이 적용됩니다.
+
+제6조 (보증의 부인 및 책임의 제한)
+1. 프로그램은 "있는 그대로" 제공됩니다. 저작권자는 프로그램이 모든 환경에서 오류 없이 동작하거나 특정 목적에 맞는다는 것을 보증하지 않습니다.
+2. 중요한 파일은 원본을 보관한 상태에서 작업해 주십시오. 법령이 허용하는 범위에서, 저작권자는 프로그램 사용으로 생긴 자료 손실이나 간접 손해에 대해 책임지지 않습니다.
+
+제7조 (허락의 종료)
+이용자가 이 약관을 위반하면 사용 허락은 자동으로 끝나며, 이용자는 프로그램을 삭제해야 합니다.
+
+제8조 (준거법)
+이 약관은 대한민국 법률에 따릅니다.
+
+문의: 쎈player 배포처(https://github.com/HooniKims/ssen-player/releases)
+
+---
+English summary: SsenPlayer is proprietary software. Copyright (c) 2026 Kim Seunghyun (Sangmyung Elementary School) and Kim Hyeonghun (Deungchon Middle School). All rights reserved. You may install and use the official build under the license terms. Redistribution, modification, derivative works, reverse engineering (except as permitted by law), uploading the program to AI services for analysis or replication, and circumventing license or update protections are prohibited. Bundled open-source components remain under their own licenses (see docs/THIRD-PARTY-NOTICES.txt 및 assets/licenses).

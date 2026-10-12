@@ -3,6 +3,9 @@
 AppId={{1459D467-38B3-4749-8E5B-30F20D09F772}
 AppName=쎈player
 AppVersion={#AppVersion}
+VersionInfoCopyright=Copyright 2026 상명초 김승현, 등촌중 김형훈
+LicenseFile=LICENSE.txt
+DisableWelcomePage=no
 AppPublisher=HooniKim
 DefaultDirName={localappdata}\Programs\SsenPlayer
 DefaultGroupName=쎈player
