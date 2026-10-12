@@ -2,7 +2,7 @@
 
 Windows 수업용 영상 플레이어. 로컬 재생에는 광고가 없습니다. MOV를 재생하면서 영상 위에 쓰고, 영상과 필기를 PNG·MP4로 저장합니다. 쎈Lite·쎈Pick의 초록색과 따뜻한 중립색 디자인을 이어갑니다.
 
-게시 준비 버전: **1.1.0** (인증 서버 등록 확인 후 정식 게시). Windows x64, Python 3.12 / PySide6 6.10.2 / Qt FFmpeg backend. 사용자 PC에는 Python이나 별도 코덱 팩을 설치할 필요가 없습니다.
+현재 버전: **1.1.0**. Windows x64, Python 3.12 / PySide6 6.10.2 / Qt FFmpeg backend. 사용자 PC에는 Python이나 별도 코덱 팩을 설치할 필요가 없습니다.
 
 **[설치 파일 다운로드 및 버전 설명](https://github.com/HooniKims/ssen-player/releases/latest)** · 설치 EXE 또는 압축을 풀어 실행하는 포터블 ZIP을 제공합니다.
 
