@@ -50,6 +50,7 @@ def main():
     if not diagnostics and not features:
         from PySide6.QtCore import QTimer
         def check_update():
+            window.offer_default_app()
             from app.updater import check_in_background
             check_in_background(window)
         QTimer.singleShot(3000, check_update)

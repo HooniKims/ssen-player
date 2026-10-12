@@ -591,6 +591,35 @@ class Player(ClassroomFeatures, QMainWindow):
     def escape(self):
         if self.mode != 'window': self.set_mode('classroom' if self.mode == 'pure' else 'window')
 
+    def open_default_apps(self):
+        from .file_associations import register_player, SETTINGS_URI
+        from PySide6.QtWidgets import QMessageBox
+        try:
+            register_player()
+            if not QDesktopServices.openUrl(QUrl(SETTINGS_URI)):
+                raise RuntimeError('Windows ??? ?? ?????. Windows ?? ? ? ? ?? ??? ?player? ?? ???.')
+        except (OSError, RuntimeError) as error:
+            QMessageBox.information(self, '?? ? ??', str(error))
+
+    def offer_default_app(self):
+        import sys
+        from .file_associations import is_default_player
+        from PySide6.QtWidgets import QMessageBox
+        if not getattr(sys, 'frozen', False) or self.current or self.mode != 'window':
+            return
+        if self.settings.value('default_app_prompt_seen', False, type=bool) or is_default_player():
+            return
+        dialog = QMessageBox(self)
+        dialog.setWindowTitle('?? ??? ? ??')
+        dialog.setText('??? ??? ?????? ?player? ????')
+        dialog.setInformativeText('Windows ?? ? ???? ?player? ??? ???. ??? ?player ????? ?? ? ????.')
+        setup = dialog.addButton('?? ? ?? ??', QMessageBox.AcceptRole)
+        dialog.addButton('???', QMessageBox.RejectRole)
+        self.settings.setValue('default_app_prompt_seen', True)
+        dialog.exec()
+        if dialog.clickedButton() == setup:
+            self.open_default_apps()
+
     def show_settings(self):
         dialog = QDialog(self)
         dialog.setWindowTitle('쎈player 설정')
@@ -598,6 +627,7 @@ class Player(ClassroomFeatures, QMainWindow):
         layout = QVBoxLayout(dialog)
         layout.setContentsMargins(25, 25, 25, 25)
         layout.setSpacing(14)
+        layout.addWidget(button('기본 동영상 앱으로 설정', self.open_default_apps))
         layout.addWidget(QLabel('캡처·녹화·구간 저장 폴더'))
         folder = QLabel(self.capture_dir)
         folder.setWordWrap(True)

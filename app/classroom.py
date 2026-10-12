@@ -65,35 +65,13 @@ class ClassroomFeatures:
         if self.youtube: self.youtube.overlay.update()
 
     def open_youtube(self):
-        dialog = QDialog(self)
-        dialog.setWindowTitle('YouTube 영상 열기')
-        dialog.setMinimumWidth(550)
-        layout = QVBoxLayout(dialog)
-        layout.setContentsMargins(22,22,22,22)
-        layout.setSpacing(14)
-        layout.addWidget(QLabel('YouTube 영상 링크'))
-        field = QLineEdit()
-        field.setPlaceholderText('https://www.youtube.com/watch?v=…')
-        if self.source_kind == 'youtube': field.setText(self.current)
-        layout.addWidget(field)
-        blocking = QCheckBox('Brave 엔진 기반 광고 요청 차단 · 실험 기능')
-        blocking.setChecked(self.settings.value('youtube_blocking', True, type=bool))
-        layout.addWidget(blocking)
-        hint = QLabel('앱 안에서 재생하도록 허용된 영상만 열 수 있습니다.\n모든 광고를 차단하지는 못합니다. 재생 오류가 나면 광고 차단을 끄고 다시 열어 보세요.')
-        hint.setWordWrap(True)
-        layout.addWidget(hint)
-        def submit():
-            from .youtube_url import video_id
-            try: identifier = video_id(field.text())
-            except ValueError as error:
-                hint.setText(str(error))
-                return
-            self.settings.setValue('youtube_blocking', blocking.isChecked())
-            dialog.accept()
-            QTimer.singleShot(0, lambda:self.load_youtube(identifier, blocking.isChecked()))
-        layout.addWidget(self.make_button('영상 열기', submit))
-        field.returnPressed.connect(submit)
-        dialog.exec()
+        from .youtube_browser import YouTubeBrowser
+        dialog = YouTubeBrowser(self, self.settings.value('youtube_blocking', True, type=bool))
+        if dialog.exec() == QDialog.Accepted and dialog.identifier:
+            identifier, blocking = dialog.identifier, dialog.blocking.isChecked()
+            self.settings.setValue('youtube_blocking', blocking)
+            QTimer.singleShot(0, lambda: self.load_youtube(identifier, blocking))
+        dialog.deleteLater()
 
     def load_youtube(self, identifier, blocking=True):
         from .youtube_url import video_id
