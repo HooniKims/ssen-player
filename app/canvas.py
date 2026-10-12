@@ -34,7 +34,7 @@ class Canvas(QGraphicsView):
         self.video = VideoItem()
         self.video.setSize(QSizeF(WIDTH, HEIGHT))
         self.scene().addItem(self.video)
-        self.setBackgroundBrush(QColor('#fafbf8'))
+        self.setBackgroundBrush(QColor('#FFFFFF'))
         self.setFrameShape(QGraphicsView.NoFrame)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -44,6 +44,7 @@ class Canvas(QGraphicsView):
         self.viewport().setAttribute(Qt.WA_AcceptTouchEvents)
         self.viewport().setMouseTracking(True)
         self.ink = Ink()
+        self.edit_guard = lambda: False
         self.tool = 'pointer'
         self.color = '#ffdf59'
         self.pen_width = 6
@@ -60,7 +61,7 @@ class Canvas(QGraphicsView):
         self.fitInView(self.sceneRect(), Qt.KeepAspectRatio)
 
     def drawBackground(self, painter, rect):
-        painter.fillRect(rect, QColor('#111d19' if self.loaded else '#fafbf8'))
+        painter.fillRect(rect, QColor('#111d19' if self.loaded else '#FFFFFF'))
 
     def set_tool(self, tool):
         self.tool = tool
@@ -70,10 +71,10 @@ class Canvas(QGraphicsView):
         painter.setRenderHint(QPainter.Antialiasing)
         if not self.loaded:
             painter.setPen(QColor('#006241'))
-            painter.setFont(QFont('Ghanachocolate', 42))
+            painter.setFont(QFont('Hakgyoansim Jayeon R', 42))
             painter.drawText(QRectF(0, 370, WIDTH, 90), Qt.AlignCenter, '보고, 쓰고, 함께 배우다')
             painter.setFont(QFont('Malgun Gothic', 22))
-            painter.setPen(QColor('#576d60'))
+            painter.setPen(QColor('#555555'))
             painter.drawText(QRectF(0, 485, WIDTH, 65), Qt.AlignCenter, '영상을 끌어 놓거나 파일 열기를 눌러 주세요')
             painter.setFont(QFont('Malgun Gothic', 17))
             painter.drawText(QRectF(0, 572, WIDTH, 50), Qt.AlignCenter, 'MOV · MP4 · MKV · AVI · WebM')
@@ -95,6 +96,7 @@ class Canvas(QGraphicsView):
         painter.restore()
 
     def stroke_begin(self, point):
+        if not self.edit_guard(): return
         if self.tool == 'pointer' or not self.sceneRect().contains(point):
             return
         self.drawing = True

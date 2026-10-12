@@ -66,3 +66,16 @@ SHA256: 2AEABF0092C3262D6B2609824418F7DD7ED1F1DF939F73B2B15645230CAC0D77
 Phosphor Icons (MIT), official regular SVG assets.
 https://github.com/phosphor-icons/core/tree/2b75f3ad12b420c9504ef05df8d2564a28f8500e
 See assets/licenses/Phosphor-MIT.txt.
+
+
+SEN design typography (bundled, offline)
+Cafe24 PRO Slim Air and Max v2.0: https://fonts.cafe24.com/
+SIL OFL 1.1, see assets/licenses/License-PRO SLIM Air.pdf and License-PRO SLIM Max.pdf.
+Hakgyoansim Jayeon R: Copyright (c) 2025 KERIS, SIL OFL 1.1.
+See assets/licenses/Hakgyoansim-Jayeon-OFL.txt and SIL-OFL-1.1.txt.
+SEN common UI SVG paths follow the user-provided series design guide.
+
+Common authentication kit: bundled noble-ed25519 and noble-hashes (MIT).
+https://github.com/paulmillr/noble-ed25519/tree/2.3.0
+https://github.com/paulmillr/noble-hashes/tree/1.8.0
+See assets/licenses/noble-ed25519-MIT.txt and noble-hashes-MIT.txt.

@@ -1,0 +1,17 @@
+{
+  "Cafe24PROSlimAir.otf": {
+    "source": "https://img.cafe24.com/csdstatic/freefonts/download/kr/Cafe24PROSlimAir_v2.0.zip",
+    "sha256": "a61bae08ccf16e18e6187354af16b322d8484e475607ff249cdbc361fd6cdc52",
+    "downloaded": "2026-10-12"
+  },
+  "Cafe24PROSlimMax.otf": {
+    "source": "https://img.cafe24.com/csdstatic/freefonts/download/kr/Cafe24PROSlimMax_v2.0.zip",
+    "sha256": "4b8ee1be8adb4d3fc8958ada15044916f26b0dcca8b0db8341eb8a78662ad787",
+    "downloaded": "2026-10-12"
+  },
+  "Hakgyoansim_JayeonR.ttf": {
+    "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202508260000000000003",
+    "sha256": "8b40277c5e782b5137e2060608ea41daf9d853c864ce2a293fdd82b4ccf08967",
+    "downloaded": "2026-10-12"
+  }
+}

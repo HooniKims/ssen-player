@@ -65,6 +65,8 @@ class Recorder(QObject):
         self.timer.timeout.connect(self.frame)
 
     def start(self, folder, system_audio=True, microphone=False, width=1280, height=720, fps=20):
+        from .auth_gate import require_authorized
+        require_authorized()
         if self.active or self.finalizing:
             raise RuntimeError('이미 녹화 중이거나 저장 중입니다.')
         self.width, self.height, self.fps = width, height, fps

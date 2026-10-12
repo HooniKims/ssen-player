@@ -1,3 +1,4 @@
+from .controls import ActionButton
 import tempfile
 import threading
 from datetime import datetime
@@ -13,18 +14,21 @@ class Events(QObject):
 
 
 class ClipJob(QRunnable):
-    def __init__(self, source, start, end, folder, youtube=False):
+    def __init__(self, source, start, end, folder, youtube=False, permit=None):
         super().__init__()
         if not 0 <= start < end or end-start < .1:
             raise ValueError('끝 지점은 시작 지점보다 뒤에 있어야 합니다.')
         self.source, self.start, self.end = source, start, end
         self.folder, self.youtube = Path(folder), youtube
+        self.permit = permit
         self.cancel = threading.Event()
         self.events = Events()
 
     def run(self):
         output = None
         try:
+            from .auth_gate import consume_permit
+            consume_permit(self.permit, 'clip')
             self.folder.mkdir(parents=True, exist_ok=True)
             with tempfile.TemporaryDirectory(prefix='.ssen-clip-', dir=self.folder) as temp:
                 source = self.source
@@ -70,7 +74,7 @@ class ClipJob(QRunnable):
 
 
 class ClipDialog(QDialog):
-    def __init__(self, parent, source, start, end, folder, youtube=False):
+    def __init__(self, parent, source, start, end, folder, youtube=False, permit=None):
         super().__init__(parent)
         self.setWindowTitle('선택 구간 MP4 저장')
         self.setMinimumWidth(490)
@@ -83,10 +87,10 @@ class ClipDialog(QDialog):
         self.label.setWordWrap(True)
         self.label.setTextInteractionFlags(self.label.textInteractionFlags() | Qt.TextSelectableByMouse)
         layout.addWidget(self.label)
-        self.close_button = QPushButton('취소')
+        self.close_button = ActionButton('취소')
         self.close_button.clicked.connect(self.reject)
         layout.addWidget(self.close_button)
-        self.job = ClipJob(source, start, end, folder, youtube)
+        self.job = ClipJob(source, start, end, folder, youtube, permit)
         self.busy = True
         self.job.events.progress.connect(self.label.setText)
         self.job.events.finished.connect(self.done_job)

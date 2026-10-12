@@ -1,7 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
-  <title>쎈player — 재생</title>
-  <rect x="4" y="4" width="248" height="248" rx="60" fill="#236959"/>
-  <rect x="48" y="91" width="34" height="104" rx="17" fill="#a4c397"/>
-  <path d="M 112 65 Q 102 58 102 71 L 102 185 Q 102 198 112 191 L 180 136 Q 190 128 180 120 Z" fill="#ffffff"/>
-  <rect x="195" y="103" width="24" height="92" rx="12" fill="#d3dfa3"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+<rect x="40" y="40" width="944" height="944" rx="210" fill="#1E3932"/>
+<rect x="210" y="282" width="604" height="414" rx="52" fill="#F2F0EB"/>
+<rect x="454" y="678" width="116" height="68" fill="#F2F0EB"/>
+<rect x="350" y="730" width="324" height="48" rx="24" fill="#F2F0EB"/>
+<path d="M440 370 L440 602 L630 486 Z" fill="#00754A"/>
+<path id="sparkle" d="M800 136 C811 192 832 213 886 224 C832 235 811 256 800 312 C789 256 768 235 714 224 C768 213 789 192 800 136Z" fill="#F2F0EB"/>
 </svg>

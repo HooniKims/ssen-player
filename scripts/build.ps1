@@ -1,5 +1,10 @@
 param([string]$Iscc = '.tools/InnoSetup/ISCC.exe')
 $ErrorActionPreference = 'Stop'
+$env:SSEN_APP_ID='player'
+& node --test tests/auth-kit/*.test.cjs
+if ($LASTEXITCODE -ne 0) { throw 'Auth kit tests failed' }
+& .venv/Scripts/python.exe -X utf8 scripts/auth_crypto_test.py
+if ($LASTEXITCODE -ne 0) { throw 'Browser crypto vectors failed' }
 & .venv/Scripts/python.exe scripts/render_associations.py
 if ($LASTEXITCODE -ne 0) { throw 'File association generation failed' }
 & .venv/Scripts/python.exe scripts/fetch_codecs.py

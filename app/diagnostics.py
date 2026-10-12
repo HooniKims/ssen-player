@@ -22,6 +22,13 @@ def run(application, window, output, started):
             application.exit(1)
             return
         timer.stop()
+        from .auth_gate import authorized
+        if not authorized():
+            report.update(decoded=True, capture_with_ink=False, auth_required=True,
+                          frame_width=frame.width(), frame_height=frame.height())
+            (output/'packaged.json').write_text(json.dumps(report, indent=2), 'utf-8')
+            application.exit(0)
+            return
         window.media.pause()
         window.choose_tool('pen')
         window.canvas.stroke_begin(QPointF(600, 300))
@@ -29,7 +36,7 @@ def run(application, window, output, started):
         window.canvas.stroke_end()
         window.canvas.capture().save(str(output/'packaged-capture.png'))
         window.grab().save(str(output/'packaged-window.png'))
-        report.update(decoded=True, capture_with_ink=True, frame_width=frame.width(), frame_height=frame.height())
+        report.update(decoded=True, capture_with_ink=bool(window.canvas.ink.strokes), frame_width=frame.width(), frame_height=frame.height())
         from PySide6.QtWidgets import QApplication
         from .legal import LegalPanel, license_text
         report['license_readable'] = '이용약관' in license_text() and '김승현' in license_text()

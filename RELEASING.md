@@ -43,3 +43,11 @@
 - 실제 iPhone MOV, HDR 원본, 고해상도/고프레임률 샘플 확인.
 - 업데이트 변조 거부와 이전 버전 → 새 버전 설치, 설정 유지 확인.
 - LGPL 구성요소의 라이선스 원문과 정확한 대응 소스 제공 경로를 배포물과 함께 유지.
+
+## 1.1.0 공통 인증 검사
+
+`SSEN_APP_ID=player node --test tests/auth-kit/*.test.cjs`와 Python 단위 시험을 빌드 스크립트에서 실행한다. 소스 회귀시험은 scripts/qa_auth.py의 가짜 권한을 사용하며 배포물에는 이 파일이 포함되지 않는다.
+
+실제 EXE에서 `--auth-test-output artifacts/qa/auth-packaged`를 실행한다. 격리 임시 저장소와 서명 없는 가짜 서버로 이용권 화면·공통 app id·서명 거부·UI와 실행부의 잠금을 확인하고 report.json과 화면 캡처를 남긴다. 실제 공통 계정은 읽거나 변경하지 않는다. 기존 미디어 smoke/feature 진단은 인증을 우회하지 않으므로 인증된 시험 PC에서 실행해야 한다.
+
+게시 전 서버의 ssen-player/player scope 지원과 학교망 이메일 수신/타 앱 인증 공유를 별도로 확인한다. 2026-10-12 사용자가 1.1.0 게시를 요청했다. 서버 player 등록 확인 후 정식 릴리즈로 전환한다.

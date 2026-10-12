@@ -1,3 +1,4 @@
+from .controls import ActionButton
 """GitHub Releases update check, like the other Ssen apps; no GitHub credentials shipped."""
 import hashlib
 import json
@@ -114,7 +115,7 @@ class Task(QRunnable):
 class UpdateDialog(QDialog):
     def __init__(self, parent, payload=None):
         super().__init__(parent)
-        self.setWindowTitle('쎈player 업데이트')
+        self.setWindowTitle('쎈Player 업데이트')
         self.setMinimumWidth(560)
         self.setStyleSheet('QDialog { background:white; }')
         self.busy = False
@@ -124,23 +125,23 @@ class UpdateDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.setSpacing(15)
         layout.setContentsMargins(25, 25, 25, 25)
-        title = QLabel('쎈player 업데이트')
-        title.setStyleSheet('font-size:18px; padding-bottom:12px; border-bottom:1px solid #d6dfd6;')
+        title = QLabel('쎈Player 업데이트')
+        title.setObjectName('dialogTitle')
         layout.addWidget(title)
         layout.addWidget(QLabel(f'현재 버전                         {VERSION}'))
         self.message = QLabel('인터넷에 연결해 새 버전을 확인합니다.')
         self.message.setWordWrap(True)
         layout.addWidget(self.message)
-        self.action = QPushButton('새 버전 확인')
+        self.action = ActionButton('새 버전 확인')
         self.action.clicked.connect(self.act)
         layout.addWidget(self.action)
         from .legal import LegalPanel
         layout.addWidget(LegalPanel())
         privacy = QLabel('업데이트 확인 때는 버전 정보만 받아 옵니다. 영상과 필기는 보내지 않아요.')
         privacy.setWordWrap(True)
-        privacy.setStyleSheet('font-size:12px; color:#576d60;')
+        privacy.setObjectName('muted')
         layout.addWidget(privacy)
-        close = QPushButton('다음에' if payload else '닫기')
+        close = ActionButton('다음에' if payload else '닫기')
         close.clicked.connect(self.reject)
         layout.addWidget(close)
         if payload:

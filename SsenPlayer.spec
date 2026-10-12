@@ -7,6 +7,7 @@ root = Path(SPECPATH)
 import runpy
 import shutil
 runpy.run_path(str(root/'scripts/prepare_legal.py'))['prepare']()
+runpy.run_path(str(root/'scripts/prepare_auth.py'), run_name='__main__')
 qt = Path(PySide6.__file__).parent
 codec_dir = root/'vendor/ffmpeg'
 ffmpeg = [(str(p), 'PySide6') for p in codec_dir.glob('*.dll')]
@@ -21,6 +22,8 @@ a = Analysis(['main.py'], pathex=[str(root)], binaries=ffmpeg,
 codec_names = {Path(source).name for source, _ in ffmpeg}
 a.binaries = [(dest, str(codec_dir/Path(dest).name) if Path(dest).name in codec_names else source, kind)
               for dest, source, kind in a.binaries]
+# The display wordmark is outlined SVG; do not ship its source font.
+a.datas = [(dest, source, kind) for dest, source, kind in a.datas if not dest.endswith('Ghanachocolate.ttf')]
 pyz = PYZ(a.pure)
 exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name='SsenPlayer', debug=False,
     bootloader_ignore_signals=False, strip=False, upx=False, console=False, icon='assets/icon.ico', version='build/version-info.txt')

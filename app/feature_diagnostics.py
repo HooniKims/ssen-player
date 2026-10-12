@@ -6,6 +6,12 @@ from app.clips import ClipJob
 
 
 def run(application, window, output):
+    from .auth_gate import authorized, issue_permit
+    if not authorized():
+        output.mkdir(parents=True, exist_ok=True)
+        (output/'features.json').write_text(json.dumps({'error':'AUTH_REQUIRED'}), 'utf-8')
+        QTimer.singleShot(0, lambda: application.exit(1))
+        return
     output.mkdir(parents=True, exist_ok=True)
     report = {}
     began = time.monotonic()
@@ -31,7 +37,7 @@ def run(application, window, output):
         report['recording'] = path
         stage = 'clip'
         window.clear_loop()
-        job = ClipJob('https://www.youtube.com/watch?v=M7lc1UVf-VE', 2, 4, str(output), True)
+        job = ClipJob('https://www.youtube.com/watch?v=M7lc1UVf-VE', 2, 4, str(output), True, permit=issue_permit('clip'))
         window._diagnostic_job = job
         job.events.finished.connect(clipped)
         QThreadPool.globalInstance().start(job)

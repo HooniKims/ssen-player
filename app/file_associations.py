@@ -13,10 +13,10 @@ SETTINGS_URI = 'ms-settings:defaultapps?registeredAppUser=SsenPlayer'
 def registration_entries(executable):
     exe = str(executable)
     entries = [
-        (rf'Software\Classes\{PROG_ID}', '', '쎈player 동영상'),
+        (rf'Software\Classes\{PROG_ID}', '', '쎈Player 동영상'),
         (rf'Software\Classes\{PROG_ID}\DefaultIcon', '', f'"{exe}",0'),
         (rf'Software\Classes\{PROG_ID}\shell\open\command', '', f'"{exe}" "%1"'),
-        (CAPABILITIES, 'ApplicationName', '쎈player'),
+        (CAPABILITIES, 'ApplicationName', '쎈Player'),
         (CAPABILITIES, 'ApplicationDescription', '영상 재생과 필기·캡처를 위한 수업용 플레이어'),
         (CAPABILITIES, 'ApplicationIcon', f'"{exe}",0'),
         (r'Software\RegisteredApplications', APP_NAME, CAPABILITIES),
@@ -30,8 +30,10 @@ def registration_entries(executable):
 
 
 def register_player():
+    from .auth_gate import require_authorized
+    require_authorized()
     if sys.platform != 'win32' or not getattr(sys, 'frozen', False):
-        raise RuntimeError('설치한 쎈player 또는 포터블 EXE에서 기본 앱 설정을 열어 주세요.')
+        raise RuntimeError('설치한 쎈Player 또는 포터블 EXE에서 기본 앱 설정을 열어 주세요.')
     import winreg
     for path, name, value in registration_entries(Path(sys.executable).resolve()):
         with winreg.CreateKey(winreg.HKEY_CURRENT_USER, path) as key:

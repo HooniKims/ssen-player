@@ -2,3 +2,10 @@
 *.py text eol=lf
 *.md text eol=lf
 assets/licenses/* -whitespace
+# Preserve the supplied authentication kit byte-for-byte across Windows checkouts.
+assets/auth/auth-service.cjs -text
+assets/auth/auth-native.cjs -text
+assets/auth/auth-store.ps1 -text
+assets/auth/auth-throttle.cjs -text
+assets/auth/auth-ui.mjs -text
+assets/auth/auth.css -text

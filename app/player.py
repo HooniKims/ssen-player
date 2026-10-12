@@ -16,6 +16,11 @@ from .subtitles import read_subtitles
 from . import VERSION
 from .classroom import ClassroomFeatures, SPEEDS
 from .controls import button, icon_only
+from .theme import load_fonts, panel_shadow
+from .flow_layout import FlowLayout
+from PySide6.QtSvgWidgets import QSvgWidget
+from .media_tools import resource
+from .auth_gate import ProtectedSettings, issue_permit, consume_permit, revoke_permits
 
 COUNTDOWN_SECONDS = 5
 MEDIA_FILTER = '동영상 (*.mov *.mp4 *.mkv *.avi *.webm *.m4v *.wmv *.flv *.ts *.mts *.m2ts *.mpg *.mpeg *.3gp);;오디오 (*.mp3 *.flac *.wav *.m4a *.ogg);;모든 파일 (*)'
@@ -41,12 +46,14 @@ class Saved(QObject):
 
 
 class SaveCapture(QRunnable):
-    def __init__(self, image, path):
+    def __init__(self, image, path, permit=None):
         super().__init__()
         self.image, self.path, self.signals = image, path, Saved()
+        self.permit = permit
 
     def run(self):
         try:
+            consume_permit(self.permit, 'capture')
             self.path.parent.mkdir(parents=True, exist_ok=True)
             if not self.image.save(str(self.path), 'PNG'):
                 raise OSError('PNG 파일을 저장하지 못했습니다. 폴더 권한과 여유 공간을 확인해 주세요.')
@@ -56,15 +63,16 @@ class SaveCapture(QRunnable):
 
 
 class Player(ClassroomFeatures, QMainWindow):
-    def __init__(self, settings=None):
+    def __init__(self, settings=None, auth_factory=None):
         super().__init__()
         font = self.font()
         font.setStyleStrategy(QFont.PreferAntialias | QFont.NoSubpixelAntialias)
         self.setFont(font)
-        self.setWindowTitle('쎈player')
-        self.resize(1280, 820)
-        self.setMinimumSize(1050, 690)
-        self.settings = settings or QSettings('HooniKim', 'SsenPlayer')
+        self.setWindowTitle('쎈Player')
+        load_fonts()
+        self.resize(1280, 800)
+        self.setMinimumSize(1024, 700)
+        self.settings = ProtectedSettings(settings or QSettings('HooniKim', 'SsenPlayer'))
         default = str(Path(QStandardPaths.writableLocation(QStandardPaths.PicturesLocation)) / '쎈player')
         self.capture_dir = self.settings.value('capture_dir', default)
         self.mode = 'window'
@@ -106,21 +114,61 @@ class Player(ClassroomFeatures, QMainWindow):
         self.save_timer.timeout.connect(self.save_position)
         self.save_timer.start(10000)
         self.setAcceptDrops(True)
+        from .auth import AuthController
+        self.auth = (auth_factory or AuthController)(self)
+        QApplication.instance().auth_controller = self.auth
+        self.auth.changed.connect(self.auth_changed)
+        self.canvas.edit_guard = self.require_edit
+        self.auth_button = button('이용권', lambda: self.auth.show())
+        self.header.layout().insertWidget(self.header.layout().count()-1, self.auth_button)
+        self.auth_notice = QLabel('이용권 확인 중…', objectName='authNotice')
+        self.auth_notice.setWordWrap(True)
+        self.root.insertWidget(1, self.auth_notice)
+        QApplication.instance().aboutToQuit.connect(self.auth.shutdown)
+
+    def require_edit(self):
+        from .auth_gate import authorized
+        if authorized(): return True
+        auth = getattr(self, 'auth', None)
+        if auth: auth.show()
+        return False
+
+    def auth_changed(self, state):
+        ready, allowed = state.get('ready'), state.get('canEdit')
+        plan = state.get('plan')
+        label = {'edu_free': '센스쿨 계정', 'edu': '센스쿨 계정', 'trial': '무료 체험', 'licensed': '통합 이용권'}.get(plan, '이용권')
+        self.auth_button.setText(label if allowed else '이용권')
+        self.auth_notice.setText('이용권 확인 중…' if not ready else
+            '작업 보호 모드 · 영상 열기와 재생은 계속 사용할 수 있습니다. 필기·저장은 이용권 인증 후 사용할 수 있습니다.')
+        self.auth_notice.setVisible(not allowed and self.mode != 'pure')
+        if ready and not allowed:
+            revoke_permits()
+            self.saved_tool = 'pointer'
+            self.canvas.stroke_end()
+            self.choose_tool('pointer')
+            if self.recorder.active: self.show_recording()
+
 
     def _build(self):
         central = QWidget()
         self.setCentralWidget(central)
         self.root = QVBoxLayout(central)
-        self.root.setContentsMargins(18, 10, 18, 12)
-        self.root.setSpacing(12)
+        self.root.setContentsMargins(16, 0, 16, 12)
+        self.root.setSpacing(14)
         self.header = QFrame(objectName='header')
         row = QHBoxLayout(self.header)
-        row.setContentsMargins(3, 0, 0, 0)
-        row.addWidget(QLabel('쎈player', objectName='brand'))
+        self.header.setFixedHeight(72)
+        row.setContentsMargins(12, 0, 12, 0)
+        row.setSpacing(10)
+        logo = QSvgWidget(str(resource('assets/logo.svg')))
+        logo.setFixedSize(160, 34)
+        logo.setAccessibleName('쎈Player')
+        row.addWidget(logo)
+        row.addWidget(QLabel(VERSION, objectName='muted'))
         self.filename = QLabel('수업에 집중하는 영상 플레이어', objectName='muted')
         self.filename.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
         row.addWidget(self.filename, 1)
-        row.addWidget(button('파일 열기', self.open_files, 'primary', 'Ctrl+O · 여러 영상 선택'))
+        row.addWidget(button('파일 열기', self.open_files, None, 'Ctrl+O · 여러 영상 선택'))
         row.addWidget(button('재생 목록', self.toggle_queue))
         row.addWidget(button('설정', self.show_settings))
         self.root.addWidget(self.header)
@@ -135,7 +183,8 @@ class Player(ClassroomFeatures, QMainWindow):
         self.video_stack.addWidget(self.canvas)
         self.middle.addWidget(self.video_stack, 1)
         self.tools_scroll = QFrame(objectName='tools')
-        self.tools_scroll.setFixedWidth(216)
+        self.tools_scroll.setFixedWidth(260)
+        panel_shadow(self.tools_scroll)
         panel_layout = QVBoxLayout(self.tools_scroll)
         panel_layout.setContentsMargins(14, 14, 14, 14)
         panel_layout.setSpacing(8)
@@ -172,15 +221,14 @@ class Player(ClassroomFeatures, QMainWindow):
         colors = QGridLayout()
         colors.setSpacing(5)
         self.colors = QButtonGroup(self)
-        for i, color in enumerate(['#ffdf59', '#ff6565', '#55d9fc', '#ffffff', '#59dd91', '#151f1a']):
-            b = button('', lambda _, c=color: self.choose_color(c), 'color', color)
-            b.setFixedSize(44, 44)
+        for i, (name, color) in enumerate(zip(['노랑', '빨강', '하늘', '하양', '초록', '검정'], ['#ffdf59', '#ff6565', '#55d9fc', '#ffffff', '#59dd91', '#151f1a'])):
+            b = button(name, lambda _, c=color: self.choose_color(c), 'color', color)
+            b.setProperty('swatch', color)
             b.setAccessibleName('펜 색상 ' + color)
             b.setCheckable(True)
-            b.setStyleSheet(f'QPushButton {{background:{color}; border:2px solid #c6d3cb;}} QPushButton:checked {{border:3px solid #00754a;}}')
             self.colors.addButton(b)
             b.setChecked(i == 0)
-            colors.addWidget(b, i//3, i%3)
+            colors.addWidget(b, i//2, i%2)
         side.addLayout(colors)
         self.width_combo = QComboBox()
         self.width_combo.addItems(['가는 펜', '중간 펜', '굵은 펜'])
@@ -194,7 +242,7 @@ class Player(ClassroomFeatures, QMainWindow):
         self.eraser_size.currentIndexChanged.connect(lambda i: setattr(self.canvas, 'eraser_radius', [12, 24, 48][i]))
         self.eraser_size.hide()
         side.addWidget(self.eraser_size)
-        edits = QHBoxLayout()
+        edits = QVBoxLayout()
         edits.addWidget(icon_only(button('되돌리기', self.undo, tip='되돌리기 · Ctrl+Z')))
         edits.addWidget(icon_only(button('다시 실행', self.redo, tip='다시 실행 · Ctrl+Y')))
         edits.addWidget(icon_only(button('모두 지우기', self.clear_ink, tip='모두 지우기 · 되돌리기로 복원 가능')))
@@ -203,7 +251,7 @@ class Player(ClassroomFeatures, QMainWindow):
         options_scroll.setWidget(self.tools)
         panel_layout.addWidget(options_scroll, 1)
         side = panel_layout
-        self.capture_button = button('캡처 저장', self.capture, 'primary', '영상 + 필기를 PNG로 저장 · Ctrl+S')
+        self.capture_button = button('캡처 저장', self.capture, None, '영상 + 필기를 PNG로 저장 · Ctrl+S')
         side.addWidget(self.capture_button)
         utilities = QHBoxLayout()
         utilities.setSpacing(6)
@@ -218,7 +266,8 @@ class Player(ClassroomFeatures, QMainWindow):
         self.root.addLayout(self.middle, 1)
         self.footer = QFrame(objectName='footer')
         foot = QVBoxLayout(self.footer)
-        foot.setContentsMargins(0, 0, 0, 0)
+        foot.setContentsMargins(16, 10, 16, 12)
+        panel_shadow(self.footer)
         track = QHBoxLayout()
         self.time = QLabel('00:00 / 00:00')
         self.time.setMinimumWidth(140)
@@ -231,7 +280,7 @@ class Player(ClassroomFeatures, QMainWindow):
         track.addWidget(self.time)
         track.addWidget(self.seek, 1)
         foot.addLayout(track)
-        controls = QHBoxLayout()
+        controls = FlowLayout()
         controls.setSpacing(8)
         controls.addWidget(icon_only(button('이전', lambda: self.next_file(-1))))
         controls.addWidget(button('−5초', lambda: self.jump(-5000)))
@@ -255,9 +304,12 @@ class Player(ClassroomFeatures, QMainWindow):
         self.loop_button = button('한 편 반복', self.toggle_loop)
         self.loop_button.setCheckable(True)
         controls.addWidget(self.loop_button)
-        controls.addStretch()
         self.mute_button = button('음소거', self.toggle_mute)
-        controls.addWidget(self.mute_button)
+        volume_group = QWidget()
+        volume_row = QHBoxLayout(volume_group)
+        volume_row.setContentsMargins(0, 0, 0, 0)
+        volume_row.setSpacing(8)
+        volume_row.addWidget(self.mute_button)
         self.volume = QSlider(Qt.Horizontal)
         self.volume.setStyle(self.seek_style)
         self.volume.setRange(0, 100)
@@ -265,10 +317,18 @@ class Player(ClassroomFeatures, QMainWindow):
         self.volume.setValue(round(self.audio.volume()*100))
         self.volume.setToolTip('음량')
         self.volume.valueChanged.connect(self.set_volume)
-        controls.addWidget(self.volume)
+        volume_row.addWidget(self.volume)
+        controls.addWidget(volume_group)
         foot.addLayout(controls)
         self.root.addWidget(self.footer)
         self.status = QLabel('영상 위에 필기하고 수업 장면을 캡처해 보세요.', objectName='status')
+        self.toast = QLabel(self, objectName='toast')
+        self.toast.setWordWrap(True)
+        self.toast.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self.toast.hide()
+        self.toast_timer = QTimer(self)
+        self.toast_timer.setSingleShot(True)
+        self.toast_timer.timeout.connect(self.toast.hide)
         self.status.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
         self.root.addWidget(self.status)
         self.pure_exit = button('수업 도구 보기', lambda: self.set_mode('classroom'), 'pureExit')
@@ -291,6 +351,13 @@ class Player(ClassroomFeatures, QMainWindow):
     def notify(self, text):
         self.status.setText(text)
         self.status.setToolTip(text)
+        self.toast.setText(text)
+        self.toast.setFixedWidth(min(640, self.width() - 64))
+        self.toast.adjustSize()
+        self.toast.move((self.width() - self.toast.width()) // 2, self.height() - self.toast.height() - 26)
+        self.toast.show()
+        self.toast.raise_()
+        self.toast_timer.start(4000)
 
     def open_files(self):
         paths, _ = QFileDialog.getOpenFileNames(self, '영상 열기', self.settings.value('last_dir', ''), MEDIA_FILTER)
@@ -329,7 +396,7 @@ class Player(ClassroomFeatures, QMainWindow):
         self.ab_button.setText('여기부터')
         self.filename.setText(Path(path).name)
         self.filename.setToolTip(path)
-        self.setWindowTitle(Path(path).name + ' · 쎈player')
+        self.setWindowTitle(Path(path).name + ' · 쎈Player')
         self.settings.setValue('last_dir', str(Path(path).parent))
         if path in self.queue:
             self.queue_list.setCurrentRow(self.queue.index(path))
@@ -466,6 +533,9 @@ class Player(ClassroomFeatures, QMainWindow):
         self.queue_list.setVisible(not self.queue_list.isVisible())
 
     def choose_tool(self, name):
+        if name != 'pointer' and not self.require_edit():
+            self.tool_buttons[self.canvas.tool].setChecked(True)
+            return
         self.canvas.set_tool(name)
         self.tool_buttons[name].setChecked(True)
         self.eraser_size.setVisible(name == 'area_eraser')
@@ -473,34 +543,40 @@ class Player(ClassroomFeatures, QMainWindow):
         if self.youtube: self.youtube.sync_tool()
 
     def choose_color(self, color):
+        if not self.require_edit(): return
         self.canvas.color = color
         if self.canvas.tool not in ('pen', 'marker'): self.choose_tool('pen')
 
     def choose_width(self, index):
+        if not self.require_edit(): return
         self.canvas.pen_width = [3, 6, 12][index]
         if self.canvas.tool not in ('pen', 'marker'): self.choose_tool('pen')
 
     def undo(self):
+        if not self.require_edit(): return
         self.canvas.ink.undo()
         self.refresh_ink()
 
     def redo(self):
+        if not self.require_edit(): return
         self.canvas.ink.redo()
         self.refresh_ink()
 
     def clear_ink(self):
+        if not self.require_edit(): return
         self.canvas.ink.clear()
         self.refresh_ink()
         self.notify('필기를 지웠습니다. 되돌리기 버튼으로 복원할 수 있습니다.')
 
     def capture(self):
+        if not self.require_edit(): return
         try:
             image = self.capture_image()
             name = ('YouTube_'+self.youtube.identifier) if self.source_kind == 'youtube' else (Path(self.current).stem if self.current else '수업')
             for char in '<>:"/\\|?*': name = name.replace(char, '_')
             name = name[:65]
             filename = f'{name}_{stamp(self.current_position()).replace(":", "-")}_{datetime.now():%Y%m%d_%H%M%S_%f}.png'
-            job = SaveCapture(image, Path(self.capture_dir)/filename)
+            job = SaveCapture(image, Path(self.capture_dir)/filename, issue_permit('capture'))
             self.jobs.add(job)
             job.signals.done.connect(lambda path, error, j=job: self.capture_done(j, path, error))
             QThreadPool.globalInstance().start(job)
@@ -514,7 +590,9 @@ class Player(ClassroomFeatures, QMainWindow):
 
     def open_capture_dir(self):
         try:
-            Path(self.capture_dir).mkdir(parents=True, exist_ok=True)
+            if not Path(self.capture_dir).exists():
+                if not self.require_edit(): return
+                Path(self.capture_dir).mkdir(parents=True, exist_ok=True)
             QDesktopServices.openUrl(QUrl.fromLocalFile(self.capture_dir))
         except OSError as error:
             self.notify('폴더를 열지 못했습니다: '+str(error))
@@ -550,6 +628,7 @@ class Player(ClassroomFeatures, QMainWindow):
             self.was_maximized = self.isMaximized()
         self.mode = mode
         self.header.setVisible(mode == 'window')
+        self.auth_notice.setVisible(mode != 'pure' and not self.auth.snapshot.get('canEdit'))
         self.footer.setVisible(mode != 'pure')
         self.tools_scroll.setVisible(mode != 'pure')
         self.status.setVisible(mode != 'pure')
@@ -592,29 +671,38 @@ class Player(ClassroomFeatures, QMainWindow):
         if self.mode != 'window': self.set_mode('classroom' if self.mode == 'pure' else 'window')
 
     def open_default_apps(self):
+        if not self.require_edit(): return
         from .file_associations import register_player, SETTINGS_URI
         from PySide6.QtWidgets import QMessageBox
         try:
             register_player()
             if not QDesktopServices.openUrl(QUrl(SETTINGS_URI)):
-                raise RuntimeError('Windows ??? ?? ?????. Windows ?? ? ? ? ?? ??? ?player? ?? ???.')
+                raise RuntimeError('Windows 설정을 열지 못했습니다. 설정 → 앱 → 기본 앱에서 쎈Player를 선택해 주세요.')
         except (OSError, RuntimeError) as error:
-            QMessageBox.information(self, '?? ? ??', str(error))
+            QMessageBox.information(self, '기본 앱 설정', str(error))
+
+    def default_app_dialog(self):
+        from PySide6.QtWidgets import QMessageBox
+        dialog = QMessageBox(self)
+        dialog.setWindowTitle('기본 동영상 앱 설정')
+        dialog.setText('동영상 파일을 더블클릭하면 쎈Player로 열까요?')
+        dialog.setInformativeText('Windows 기본 앱 설정에서 쎈Player를 선택해 주세요. 나중에 설정에서 변경할 수도 있습니다.')
+        setup = button('기본 앱 설정 열기', lambda: None)
+        dialog.addButton(setup, QMessageBox.AcceptRole)
+        dialog.later_button = button('나중에', lambda: None)
+        dialog.addButton(dialog.later_button, QMessageBox.RejectRole)
+        return dialog, setup
 
     def offer_default_app(self):
         import sys
         from .file_associations import is_default_player
         from PySide6.QtWidgets import QMessageBox
+        if not self.auth.snapshot.get('canEdit'): return
         if not getattr(sys, 'frozen', False) or self.current or self.mode != 'window':
             return
         if self.settings.value('default_app_prompt_seen', False, type=bool) or is_default_player():
             return
-        dialog = QMessageBox(self)
-        dialog.setWindowTitle('?? ??? ? ??')
-        dialog.setText('??? ??? ?????? ?player? ????')
-        dialog.setInformativeText('Windows ?? ? ???? ?player? ??? ???. ??? ?player ????? ?? ? ????.')
-        setup = dialog.addButton('?? ? ?? ??', QMessageBox.AcceptRole)
-        dialog.addButton('???', QMessageBox.RejectRole)
+        dialog, setup = self.default_app_dialog()
         self.settings.setValue('default_app_prompt_seen', True)
         dialog.exec()
         if dialog.clickedButton() == setup:
@@ -622,7 +710,7 @@ class Player(ClassroomFeatures, QMainWindow):
 
     def show_settings(self):
         dialog = QDialog(self)
-        dialog.setWindowTitle('쎈player 설정')
+        dialog.setWindowTitle('쎈Player 설정')
         dialog.setMinimumWidth(540)
         outer = QVBoxLayout(dialog)
         scroll = QScrollArea()
@@ -640,6 +728,7 @@ class Player(ClassroomFeatures, QMainWindow):
         folder.setWordWrap(True)
         layout.addWidget(folder)
         def change_folder():
+            if not self.require_edit(): return
             path = QFileDialog.getExistingDirectory(dialog, '캡처·녹화·구간 저장 폴더 선택', self.capture_dir)
             if path:
                 self.capture_dir = path
@@ -669,7 +758,7 @@ class Player(ClassroomFeatures, QMainWindow):
         delay.addWidget(button('−0.5초', lambda: self.shift_subtitle(-500)))
         delay.addWidget(button('+0.5초', lambda: self.shift_subtitle(500)))
         layout.addLayout(delay)
-        layout.addWidget(QLabel(f'쎈player {VERSION} · HooniKim'))
+        layout.addWidget(QLabel(f'쎈Player {VERSION} · HooniKim'))
         layout.addWidget(button('업데이트 확인', self.check_update))
         layout.addWidget(QLabel('F11  수업 / 완전 화면 전환    Esc  이전 화면\nCtrl+S  영상 + 필기 캡처    Ctrl+Z  필기 되돌리기', objectName='muted'))
         from .legal import LegalPanel

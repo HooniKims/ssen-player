@@ -12,7 +12,7 @@ from PySide6.QtCore import QSettings, QPoint, QPointF, Qt
 from PySide6.QtGui import QFontDatabase, QImage
 from PySide6.QtTest import QTest
 from PySide6.QtMultimedia import QMediaPlayer
-from app.player import Player
+from scripts.qa_auth import test_player as Player
 from app.style import STYLE
 import psutil
 

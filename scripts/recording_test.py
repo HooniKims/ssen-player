@@ -13,8 +13,9 @@ os.environ['QT_MEDIA_BACKEND']='ffmpeg'
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QSettings,QPointF
 from PySide6.QtTest import QTest
-from app.player import Player
+from scripts.qa_auth import test_player as Player
 from app.clips import ClipJob
+from app.auth_gate import issue_permit
 from PySide6.QtCore import QThreadPool
 
 out=ROOT/'artifacts/qa/v0.2'
@@ -86,7 +87,7 @@ assert window.segment_data()[window.current][-1]['name']=='실험 장면'
 dialog.close()
 assert window.segment_dialog is None
 result=[]
-job=ClipJob(str(ROOT/'artifacts/test-media/classroom.mov'),2,4,out)
+job=ClipJob(str(ROOT/'artifacts/test-media/classroom.mov'),2,4,out,permit=issue_permit('clip'))
 job.events.finished.connect(lambda p,e:result.append((p,e)))
 QThreadPool.globalInstance().start(job)
 wait(lambda:bool(result),30)

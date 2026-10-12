@@ -10,7 +10,7 @@ from PySide6.QtGui import QFontDatabase, QMouseEvent
 from PySide6.QtWidgets import QApplication, QDialog, QWidget
 from PySide6.QtTest import QTest
 from PySide6.QtMultimedia import QMediaPlayer, QAudioBufferOutput
-from app.player import Player
+from scripts.qa_auth import test_player as Player
 from app.style import STYLE
 
 app=QApplication([])

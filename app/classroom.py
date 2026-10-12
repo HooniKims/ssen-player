@@ -19,7 +19,7 @@ class ClassroomFeatures:
         self.recorder.elapsed.connect(lambda sec:self.record_button.setText(f'녹화 종료 {sec//60:02}:{sec%60:02}'))
         self.recorder.warning.connect(self.notify)
         self.close_after_recording = False
-        self.header.layout().insertWidget(3, self.make_button('YouTube', self.open_youtube))
+        self.header.layout().insertWidget(4, self.make_button('YouTube', self.open_youtube))
         side = self.tools_scroll.layout()
         side.insertWidget(1, self.make_button('구간 설정', self.show_segments))
         self.record_button = self.make_button('수업 녹화', self.show_recording)
@@ -211,6 +211,7 @@ class ClassroomFeatures:
             self.settings.sync()
             refresh()
         def save():
+            if not self.require_edit(): return
             try:
                 a,b=values()
                 entries.append(dict(name=name.text().strip() or f'구간 {len(entries)+1}',a=a,b=b))
@@ -224,6 +225,7 @@ class ClassroomFeatures:
             name.setText(entry['name'])
             play()
         def remove():
+            if not self.require_edit(): return
             if 0 <= saved.currentRow() < len(entries):
                 entries.pop(saved.currentRow())
                 persist()
@@ -235,12 +237,14 @@ class ClassroomFeatures:
         saved.itemClicked.connect(recall)
         layout.addWidget(saved,1)
         def export():
+            if not self.require_edit(): return
+            from .auth_gate import issue_permit
             try: a,b=values()
             except ValueError as error:
                 message.setText(str(error))
                 return
             from .clips import ClipDialog
-            ClipDialog(dialog,self.current,a/1000,b/1000,self.capture_dir,self.source_kind=='youtube').exec()
+            ClipDialog(dialog,self.current,a/1000,b/1000,self.capture_dir,self.source_kind=='youtube', permit=issue_permit('clip')).exec()
         layout.addWidget(self.make_button('이 구간을 MP4로 저장 · 필기 제외',export))
         layout.addWidget(self.make_button('닫고 영상 보기',dialog.accept))
         dialog.setModal(False)
@@ -258,6 +262,7 @@ class ClassroomFeatures:
             self.recorder.stop()
             return
         if self.recorder.finalizing: return
+        if not self.require_edit(): return
         dialog=QDialog(self)
         dialog.setWindowTitle('수업 녹화')
         dialog.setMinimumWidth(510)
@@ -278,7 +283,7 @@ class ClassroomFeatures:
             try:
                 self.recorder.start(self.capture_dir,sound.isChecked(),mic.isChecked())
                 self.record_button.setText('녹화 종료 00:00')
-                self.record_button.setStyleSheet('background:#b13930;color:white;')
+                self.record_button.setStyleSheet('background:#C23B22;color:white;')
                 self.notify('수업 녹화 중 · 영상과 필기를 함께 녹화합니다.')
                 dialog.accept()
             except Exception as error: label.setText('녹화를 시작하지 못했습니다: '+str(error))

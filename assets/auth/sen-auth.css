@@ -1,0 +1,10 @@
+@font-face{font-family:SenBody;src:url('../fonts/Cafe24PROSlimAir.otf')}@font-face{font-family:SenHeading;src:url('../fonts/Cafe24PROSlimMax.otf')}@font-face{font-family:SenDisplay;src:url('../fonts/Hakgyoansim_JayeonR.ttf')}
+*{box-sizing:border-box;font-synthesis:none}body{margin:0;background:#F2F0EB;color:#1F1F1F;font:16px SenBody}header,main,#authBar{display:none!important}
+#authDialog{width:calc(100vw - 32px);max-height:calc(100vh - 32px);margin:16px;padding:24px 28px;border:0;border-radius:16px;box-shadow:0 6px 20px #1f1f1f0d;color:#1F1F1F}
+#authDialog,#authDialog p,#authDialog label,#authDialog input,#authDialog *{font-family:SenBody,sans-serif;font-weight:400;color:#1F1F1F}
+#authDialog h2,#authDialog h3{font-family:SenHeading;font-weight:400;color:#111}#authDialog h2{font-size:21px}
+#authDialog button{font:15px SenDisplay;background:white;border:1px solid #D9D5CC;border-radius:8px;min-height:42px;padding:0 14px;-webkit-text-stroke:.5px currentColor}
+#authDialog button:before{content:'';display:inline-block;width:18px;height:18px;margin-right:7px;vertical-align:middle;background:currentColor;mask:url('../icons/green/check.svg') center/contain no-repeat}#authDialog button.primary{background:#00754A;color:white;border-color:#00754A}#authDialog button.primary:before{color:white}
+#authDialog button:focus-visible,#authDialog input:focus{outline:2px solid #00754A;outline-offset:2px}#authDialog input{border-color:#D9D5CC;font-size:16px}#authDialog p.auth-note{font-size:15px;color:#555}#authDialog::backdrop{background:#F2F0EB}#authDialog a{color:#006241}#authBadge{background:#FDF1E2;color:#B25E09}#authBadge[data-mode=full]{background:#E6F2EC;color:#00754A}#authError{background:#FBEAE6;color:#C23B22}
+
+#authDialog #authClose:before{mask-image:url('../icons/green/x.svg')}#authDialog #authViewOnly:before{mask-image:url('../icons/green/play.svg')}#authDialog #authDevicesButton:before{mask-image:url('../icons/green/list-bullets.svg')}

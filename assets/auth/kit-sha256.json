@@ -1,0 +1,8 @@
+{
+  "auth-native.cjs": "cb3c52bc66e217de28defc864282f177c5532c9981bf1601f244bdf682f3b279",
+  "auth-service.cjs": "65abfa26ca986c8f78ae459d0b6d4a315471e92ac6f5815d3726b33fff98c10c",
+  "auth-store.ps1": "ed27f54ed7437ac3f06a91004d38d58ad5bb36ce22dfbd9a4b4c53ab377fe99b",
+  "auth-throttle.cjs": "29124e1f972ff74943240e945a50b8f1b5bc246ea168f900e7fe1a24625daf7c",
+  "auth-ui.mjs": "bd0df976032e6b6aeef857cc9d15c41732184bc2f91029887bd1a219cbb585a3",
+  "auth.css": "ca75f0ace325713a38d76f3fd6312af5fa33e0f562d534630cf5f1a4292229c6"
+}

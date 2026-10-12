@@ -1,0 +1,237 @@
+{
+ "note": "TEST-ONLY keys derived from public labels. Never trust these keys in a product build.",
+ "specVersion": "5.0.0",
+ "tokenFormat": 2,
+ "now": 1800000000,
+ "trust": {
+  "rootKid": "be6f526319bc09b8",
+  "rootX": "nK5riysJEKeg6ephx_4nNtc-XlAAolyecXJ8Pzsua3U",
+  "iss": "https://test.ssen.invalid"
+ },
+ "expect": {
+  "iss": "https://test.ssen.invalid",
+  "sub": "acc-1",
+  "regId": "11111111-1111-4111-8111-111111111111",
+  "deviceId": "dev-abcdefgh12345678",
+  "app": "cut"
+ },
+ "keyListSteps": [
+  {
+   "name": "initial",
+   "keyList": "eyJ0eXAiOiJzc2VuLWtleXMrandzIiwiYWxnIjoiRWREU0EiLCJraWQiOiJiZTZmNTI2MzE5YmMwOWI4In0.eyJ2IjoyLCJpc3MiOiJodHRwczovL3Rlc3Quc3Nlbi5pbnZhbGlkIiwidHlwIjoic3Nlbi1rZXlzIiwiaWF0IjoxNzk5OTk5OTAwLCJleHAiOjE4MDA2MDQ4MDAsInNlcSI6MTc5OTk5OTkwMCwia2V5cyI6W3sia2lkIjoiMzM2ZjViZmI5OTRjM2EzNSIsImFsZyI6IkVkMjU1MTkiLCJ4IjoiT2hFR2d2eVd2WEJKaERlaEdpQlNxTFZGRmlXb2FXb09McXBKeGV5b1d1MCIsInN0YXR1cyI6ImFjdGl2ZSJ9XSwicmV2b2tlZCI6W119.LQ2NJXyXDQ90mZ3QaZVyVVmUpg1KmNj_WmR4hMMZ_GNlMyOqvcCzUw__M0B89ZciSnPAV_nUdocVVITWmN5sBA",
+   "now": 1800000000,
+   "expect": "ACCEPT"
+  }
+ ],
+ "tokens": [
+  {
+   "name": "edu-ok",
+   "token": "eyJ0eXAiOiJzc2VuLWxpYytqd3QiLCJhbGciOiJFZERTQSIsImtpZCI6IjMzNmY1YmZiOTk0YzNhMzUifQ.eyJ2IjoyLCJpc3MiOiJodHRwczovL3Rlc3Quc3Nlbi5pbnZhbGlkIiwiYXVkIjoic3Nlbi1kZXNrdG9wIiwidHlwIjoiZ2VuZXJhbCIsInN1YiI6ImFjYy0xIiwicmVnX2lkIjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwiZGV2aWNlX2lkIjoiZGV2LWFiY2RlZmdoMTIzNDU2NzgiLCJwbGFuIjoiZWR1X2ZyZWUiLCJsaWNlbnNlX2lkIjpudWxsLCJzY29wZSI6WyJjdXQiLCJwZGYiLCJpbWciXSwiaWF0IjoxNzk5OTk2NDAwLCJuYmYiOjE3OTk5OTY0MDAsInJlZnJlc2hfYXQiOjE4MDA2MDEyMDAsIm9mZmxpbmVfdW50aWwiOjE4MDI1ODg0MDAsImV4cCI6MTgwMzE5MzIwMCwiZW50X2V4cCI6MTgyNTkyMDAwMCwianRpIjoiang5cGNuczA5dmwifQ.Uq2zLBP_DH8rQjQF3TD-Xg2QZsO2Pu48Zczqdm7Y9Csf_8YvVBM8m9jx887C6btl-ny3V1XhOYW3rGUtK6cVDA",
+   "expect": "OK",
+   "mode": "full"
+  },
+  {
+   "name": "edu-offline-grace",
+   "token": "eyJ0eXAiOiJzc2VuLWxpYytqd3QiLCJhbGciOiJFZERTQSIsImtpZCI6IjMzNmY1YmZiOTk0YzNhMzUifQ.eyJ2IjoyLCJpc3MiOiJodHRwczovL3Rlc3Quc3Nlbi5pbnZhbGlkIiwiYXVkIjoic3Nlbi1kZXNrdG9wIiwidHlwIjoiZ2VuZXJhbCIsInN1YiI6ImFjYy0xIiwicmVnX2lkIjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwiZGV2aWNlX2lkIjoiZGV2LWFiY2RlZmdoMTIzNDU2NzgiLCJwbGFuIjoiZWR1X2ZyZWUiLCJsaWNlbnNlX2lkIjpudWxsLCJzY29wZSI6WyJjdXQiLCJwZGYiLCJpbWciXSwiaWF0IjoxNzk5OTk2NDAwLCJuYmYiOjE3OTk5OTY0MDAsInJlZnJlc2hfYXQiOjE4MDA2MDEyMDAsIm9mZmxpbmVfdW50aWwiOjE4MDI1ODg0MDAsImV4cCI6MTgwMzE5MzIwMCwiZW50X2V4cCI6MTgyNTkyMDAwMCwianRpIjoiandxZ3loNjFyMngifQ.ODy3GbdPE9dplvNxVluBRcB_n7XxvxBEkNhkKCsBjQ9DVU6xkqrH389rtDiWa5-1nFLttZhGebfuJBGiXhLkCQ",
+   "expect": "OFFLINE_GRACE",
+   "mode": "full",
+   "now": 1802678400
+  },
+  {
+   "name": "edu-entitlement-ended",
+   "token": "eyJ0eXAiOiJzc2VuLWxpYytqd3QiLCJhbGciOiJFZERTQSIsImtpZCI6IjMzNmY1YmZiOTk0YzNhMzUifQ.eyJ2IjoyLCJpc3MiOiJodHRwczovL3Rlc3Quc3Nlbi5pbnZhbGlkIiwiYXVkIjoic3Nlbi1kZXNrdG9wIiwidHlwIjoiZ2VuZXJhbCIsInN1YiI6ImFjYy0xIiwicmVnX2lkIjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwiZGV2aWNlX2lkIjoiZGV2LWFiY2RlZmdoMTIzNDU2NzgiLCJwbGFuIjoiZWR1X2ZyZWUiLCJsaWNlbnNlX2lkIjpudWxsLCJzY29wZSI6WyJjdXQiLCJwZGYiLCJpbWciXSwiaWF0IjoxNzk5OTk2NDAwLCJuYmYiOjE3OTk5OTY0MDAsInJlZnJlc2hfYXQiOjE4MDAwODY0MDAsIm9mZmxpbmVfdW50aWwiOjE4MDAwODY0MDAsImV4cCI6MTgwMDA4NjQwMCwiZW50X2V4cCI6MTgwMDA4NjQwMCwianRpIjoiajlkNTMxZHM0OGQ5In0.28giv3WxLX918omoBm8mAgrRFgVjnx7Xi8cHbyOGBr_R__75Pk8REKZwcwJ5AUOiOe_D81JQzVh0fxY94dVKCg",
+   "expect": "ENT_EXPIRED",
+   "mode": "protect",
+   "now": 1800172800
+  },
+  {
+   "name": "edu-with-license-id",
+   "token": "eyJ0eXAiOiJzc2VuLWxpYytqd3QiLCJhbGciOiJFZERTQSIsImtpZCI6IjMzNmY1YmZiOTk0YzNhMzUifQ.eyJ2IjoyLCJpc3MiOiJodHRwczovL3Rlc3Quc3Nlbi5pbnZhbGlkIiwiYXVkIjoic3Nlbi1kZXNrdG9wIiwidHlwIjoiZ2VuZXJhbCIsInN1YiI6ImFjYy0xIiwicmVnX2lkIjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwiZGV2aWNlX2lkIjoiZGV2LWFiY2RlZmdoMTIzNDU2NzgiLCJwbGFuIjoiZWR1X2ZyZWUiLCJsaWNlbnNlX2lkIjoibGljLTEiLCJzY29wZSI6WyJjdXQiLCJwZGYiLCJpbWciXSwiaWF0IjoxNzk5OTk2NDAwLCJuYmYiOjE3OTk5OTY0MDAsInJlZnJlc2hfYXQiOjE4MDA2MDEyMDAsIm9mZmxpbmVfdW50aWwiOjE4MDI1ODg0MDAsImV4cCI6MTgwMzE5MzIwMCwiZW50X2V4cCI6MTgyNTkyMDAwMCwianRpIjoiajh5ZmJldjVnc3FmIn0.dNH3GXhZdtYuf9B0CuhjVYX2MP8Sly1hmZ1BNCfRSkPzs20orXxab2Wy3beLMegj6l5CYJdh58hp1qmWoijYAg",
+   "expect": "CLAIMS",
+   "mode": "reject"
+  },
+  {
+   "name": "edu-without-ent-exp",
+   "token": "eyJ0eXAiOiJzc2VuLWxpYytqd3QiLCJhbGciOiJFZERTQSIsImtpZCI6IjMzNmY1YmZiOTk0YzNhMzUifQ.eyJ2IjoyLCJpc3MiOiJodHRwczovL3Rlc3Quc3Nlbi5pbnZhbGlkIiwiYXVkIjoic3Nlbi1kZXNrdG9wIiwidHlwIjoiZ2VuZXJhbCIsInN1YiI6ImFjYy0xIiwicmVnX2lkIjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwiZGV2aWNlX2lkIjoiZGV2LWFiY2RlZmdoMTIzNDU2NzgiLCJwbGFuIjoiZWR1X2ZyZWUiLCJsaWNlbnNlX2lkIjpudWxsLCJzY29wZSI6WyJjdXQiLCJwZGYiLCJpbWciXSwiaWF0IjoxNzk5OTk2NDAwLCJuYmYiOjE3OTk5OTY0MDAsInJlZnJlc2hfYXQiOjE4MDA2MDEyMDAsIm9mZmxpbmVfdW50aWwiOjE4MDI1ODg0MDAsImV4cCI6MTgwMzE5MzIwMCwiZW50X2V4cCI6bnVsbCwianRpIjoiajRhbXBvMW5kd2puIn0.HaMQ7GtBg98nGE44nLZNHcnQ5bReQXajIU4vo6JQSsiQ2eqhQEVKkHL51-PUuw6cXRMHDjY_xzwAjxMEAmIqDA",
+   "expect": "CLAIMS",
+   "mode": "reject"
+  },
+  {
+   "name": "edu-exp-after-ent-exp",
+   "token": "eyJ0eXAiOiJzc2VuLWxpYytqd3QiLCJhbGciOiJFZERTQSIsImtpZCI6IjMzNmY1YmZiOTk0YzNhMzUifQ.eyJ2IjoyLCJpc3MiOiJodHRwczovL3Rlc3Quc3Nlbi5pbnZhbGlkIiwiYXVkIjoic3Nlbi1kZXNrdG9wIiwidHlwIjoiZ2VuZXJhbCIsInN1YiI6ImFjYy0xIiwicmVnX2lkIjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwiZGV2aWNlX2lkIjoiZGV2LWFiY2RlZmdoMTIzNDU2NzgiLCJwbGFuIjoiZWR1X2ZyZWUiLCJsaWNlbnNlX2lkIjpudWxsLCJzY29wZSI6WyJjdXQiLCJwZGYiLCJpbWciXSwiaWF0IjoxNzk5OTk2NDAwLCJuYmYiOjE3OTk5OTY0MDAsInJlZnJlc2hfYXQiOjE4MDA2MDEyMDAsIm9mZmxpbmVfdW50aWwiOjE4MDI1ODg0MDAsImV4cCI6MTgyNTkyMDAxMCwiZW50X2V4cCI6MTgyNTkyMDAwMCwianRpIjoianpudDd6bHAwZHQifQ.pRulsu82ZZ7GAi20N7vv1ZT0XqIEWHLiXWblcKveSFv4VA53i3Ovrl9VqYJ9JnduCVbKqyhrgyIDiHgzoUDTDQ",
+   "expect": "TIMES",
+   "mode": "reject"
+  },
+  {
+   "name": "licensed-ok",
+   "token": "eyJ0eXAiOiJzc2VuLWxpYytqd3QiLCJhbGciOiJFZERTQSIsImtpZCI6IjMzNmY1YmZiOTk0YzNhMzUifQ.eyJ2IjoyLCJpc3MiOiJodHRwczovL3Rlc3Quc3Nlbi5pbnZhbGlkIiwiYXVkIjoic3Nlbi1kZXNrdG9wIiwidHlwIjoiZ2VuZXJhbCIsInN1YiI6ImFjYy0xIiwicmVnX2lkIjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwiZGV2aWNlX2lkIjoiZGV2LWFiY2RlZmdoMTIzNDU2NzgiLCJwbGFuIjoibGljZW5zZWQiLCJsaWNlbnNlX2lkIjoibGljLTEiLCJzY29wZSI6WyJjdXQiLCJwZGYiLCJpbWciXSwiaWF0IjoxNzk5OTk2NDAwLCJuYmYiOjE3OTk5OTY0MDAsInJlZnJlc2hfYXQiOjE4MDA2MDEyMDAsIm9mZmxpbmVfdW50aWwiOjE4MDI1ODg0MDAsImV4cCI6MTgwMzE5MzIwMCwiZW50X2V4cCI6MTgxNzI4MDAwMCwianRpIjoianYzbHJoeGRhZWJiIn0.o5ZSjaFMugpx1gpyjvWBr2qCisdgeplwtuY53vlTAVWO2baN6CoLDUmHzl8HYSAgtiHzICX6yC6NnDqbGa9eBA",
+   "expect": "OK",
+   "mode": "full"
+  },
+  {
+   "name": "licensed-without-license-id",
+   "token": "eyJ0eXAiOiJzc2VuLWxpYytqd3QiLCJhbGciOiJFZERTQSIsImtpZCI6IjMzNmY1YmZiOTk0YzNhMzUifQ.eyJ2IjoyLCJpc3MiOiJodHRwczovL3Rlc3Quc3Nlbi5pbnZhbGlkIiwiYXVkIjoic3Nlbi1kZXNrdG9wIiwidHlwIjoiZ2VuZXJhbCIsInN1YiI6ImFjYy0xIiwicmVnX2lkIjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwiZGV2aWNlX2lkIjoiZGV2LWFiY2RlZmdoMTIzNDU2NzgiLCJwbGFuIjoibGljZW5zZWQiLCJsaWNlbnNlX2lkIjpudWxsLCJzY29wZSI6WyJjdXQiLCJwZGYiLCJpbWciXSwiaWF0IjoxNzk5OTk2NDAwLCJuYmYiOjE3OTk5OTY0MDAsInJlZnJlc2hfYXQiOjE4MDA2MDEyMDAsIm9mZmxpbmVfdW50aWwiOjE4MDI1ODg0MDAsImV4cCI6MTgwMzE5MzIwMCwiZW50X2V4cCI6MTgxNzI4MDAwMCwianRpIjoianZxbGNtbWJqbmUifQ.7a6msoJl8dAHsnRrolhghbLrTnbtjpKJLqkM-_iZFffYp3UaEOnd1XEWGoPS4F5N1k91RVM1mj9wxaFYNwUIAw",
+   "expect": "CLAIMS",
+   "mode": "reject"
+  },
+  {
+   "name": "trial-ok",
+   "token": "eyJ0eXAiOiJzc2VuLWxpYytqd3QiLCJhbGciOiJFZERTQSIsImtpZCI6IjMzNmY1YmZiOTk0YzNhMzUifQ.eyJ2IjoyLCJpc3MiOiJodHRwczovL3Rlc3Quc3Nlbi5pbnZhbGlkIiwiYXVkIjoic3Nlbi1kZXNrdG9wIiwidHlwIjoiZ2VuZXJhbCIsInN1YiI6ImFjYy0xIiwicmVnX2lkIjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwiZGV2aWNlX2lkIjoiZGV2LWFiY2RlZmdoMTIzNDU2NzgiLCJwbGFuIjoidHJpYWwiLCJsaWNlbnNlX2lkIjpudWxsLCJzY29wZSI6WyJjdXQiLCJwZGYiLCJpbWciXSwiaWF0IjoxNzk5OTk2NDAwLCJuYmYiOjE3OTk5OTY0MDAsInJlZnJlc2hfYXQiOjE4MDA2MDEyMDAsIm9mZmxpbmVfdW50aWwiOjE4MDI1ODg0MDAsImV4cCI6MTgwMzE5MzIwMCwiZW50X2V4cCI6MTgwNjkxMjAwMCwianRpIjoianAyM3RvNzh3ZGVqIn0.HPjAawR95HyI0iyb2T1aeZnUAnj-gKx79ywrRGJkPNDiUxSA2zqKwokqebDVZan4kFa4DR8eL2Wcfbqr17EyCg",
+   "expect": "OK",
+   "mode": "full"
+  },
+  {
+   "name": "unknown-plan",
+   "token": "eyJ0eXAiOiJzc2VuLWxpYytqd3QiLCJhbGciOiJFZERTQSIsImtpZCI6IjMzNmY1YmZiOTk0YzNhMzUifQ.eyJ2IjoyLCJpc3MiOiJodHRwczovL3Rlc3Quc3Nlbi5pbnZhbGlkIiwiYXVkIjoic3Nlbi1kZXNrdG9wIiwidHlwIjoiZ2VuZXJhbCIsInN1YiI6ImFjYy0xIiwicmVnX2lkIjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwiZGV2aWNlX2lkIjoiZGV2LWFiY2RlZmdoMTIzNDU2NzgiLCJwbGFuIjoiZWR1IiwibGljZW5zZV9pZCI6bnVsbCwic2NvcGUiOlsiY3V0IiwicGRmIiwiaW1nIl0sImlhdCI6MTc5OTk5NjQwMCwibmJmIjoxNzk5OTk2NDAwLCJyZWZyZXNoX2F0IjoxODAwNjAxMjAwLCJvZmZsaW5lX3VudGlsIjoxODAyNTg4NDAwLCJleHAiOjE4MDMxOTMyMDAsImVudF9leHAiOjE4MjU5MjAwMDAsImp0aSI6ImpsZ3Z2YjR4MXM0In0.XhIo0rMMN-Ce0whWpPlOLDEJs1Uw5H5RgRr1je85u8D0WFlzBWMp7rn_25xbopdYmBYMpJvp6pj8clJv8VOhAg",
+   "expect": "CLAIMS",
+   "mode": "reject"
+  },
+  {
+   "name": "other-device",
+   "token": "eyJ0eXAiOiJzc2VuLWxpYytqd3QiLCJhbGciOiJFZERTQSIsImtpZCI6IjMzNmY1YmZiOTk0YzNhMzUifQ.eyJ2IjoyLCJpc3MiOiJodHRwczovL3Rlc3Quc3Nlbi5pbnZhbGlkIiwiYXVkIjoic3Nlbi1kZXNrdG9wIiwidHlwIjoiZ2VuZXJhbCIsInN1YiI6ImFjYy0xIiwicmVnX2lkIjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwiZGV2aWNlX2lkIjoiZGV2LWFiY2RlZmdoMTIzNDU2NzgiLCJwbGFuIjoiZWR1X2ZyZWUiLCJsaWNlbnNlX2lkIjpudWxsLCJzY29wZSI6WyJjdXQiLCJwZGYiLCJpbWciXSwiaWF0IjoxNzk5OTk2NDAwLCJuYmYiOjE3OTk5OTY0MDAsInJlZnJlc2hfYXQiOjE4MDA2MDEyMDAsIm9mZmxpbmVfdW50aWwiOjE4MDI1ODg0MDAsImV4cCI6MTgwMzE5MzIwMCwiZW50X2V4cCI6MTgyNTkyMDAwMCwianRpIjoianM4NXM4amd2dDhlIn0.DM8zYMMFkM_dY7dLPWfSk1pfwmJ4q1qfFZ6tjAN0LhInm4qzA1c3VlpwFst2bFLwtkgecY4Sf4_LAbX9S37JAA",
+   "expect": "DEVICE",
+   "mode": "reject",
+   "ctx": {
+    "deviceId": "dev-other-000000000"
+   }
+  }
+ ],
+ "requestSignatures": [
+  {
+   "name": "license-redeem",
+   "method": "POST",
+   "pathAndQuery": "/api/public/v1/license/redeem",
+   "bearer": "TEST-ONLY-account-token-abcdefghijklmnop",
+   "bearerSha256": "2b5e12bc0528d66892a1bcab508752ddb94e206ccf466af65e8b572b68d4f7c5",
+   "rawBody": "{\"code\":\"SSEN-7K2M-QX9P-4HRT\"}",
+   "rawBodyUtf8Hex": "7b22636f6465223a225353454e2d374b324d2d515839502d34485254227d",
+   "bodySha256": "a8371eb1fb3b0c24a62c7accfe6d9b6a8f26a3a89fdb43059591cbe7d4c44a6e",
+   "canonical": "SSEN-REQ-V3\nPOST\n/api/public/v1/license/redeem\nTEST-nonce-license-redeem\n11111111-1111-4111-8111-111111111111\n2b5e12bc0528d66892a1bcab508752ddb94e206ccf466af65e8b572b68d4f7c5\na8371eb1fb3b0c24a62c7accfe6d9b6a8f26a3a89fdb43059591cbe7d4c44a6e",
+   "canonicalUtf8Hex": "5353454e2d5245512d56330a504f53540a2f6170692f7075626c69632f76312f6c6963656e73652f72656465656d0a544553542d6e6f6e63652d6c6963656e73652d72656465656d0a31313131313131312d313131312d343131312d383131312d3131313131313131313131310a326235653132626330353238643636383932613162636162353038373532646462393465323036636366343636616636356538623537326236386434663763350a61383337316562316662336230633234613632633761636366653664396236613866323661336138396664623433303539353931636265376434633434613665",
+   "signerPublicKey": "r2AJoT_9JaLBV7WdHJsAYAUzy2R3k5IphcZW8RHFHWs",
+   "headers": {
+    "Authorization": "Bearer TEST-ONLY-account-token-abcdefghijklmnop",
+    "X-Ssen-Reg": "11111111-1111-4111-8111-111111111111",
+    "X-Ssen-Nonce": "TEST-nonce-license-redeem",
+    "X-Ssen-Signature": "BKTSDfBd19du0h1AqeRmK71IzgqxCvgHJor8cwZ1LJsu_avCXgOMn6c6iUjfwe_zIYSYdg0tHLv1S58_UehLCA"
+   }
+  },
+  {
+   "name": "license-token-after-redeem",
+   "method": "POST",
+   "pathAndQuery": "/api/public/v1/license/token",
+   "bearer": "TEST-ONLY-account-token-abcdefghijklmnop",
+   "bearerSha256": "2b5e12bc0528d66892a1bcab508752ddb94e206ccf466af65e8b572b68d4f7c5",
+   "rawBody": "{\"app\":\"cut\"}",
+   "rawBodyUtf8Hex": "7b22617070223a22637574227d",
+   "bodySha256": "23b84d7007f2e9608a1b45800eab32f3fb796d2ecdbda4df58d68eddc5e61eb0",
+   "canonical": "SSEN-REQ-V3\nPOST\n/api/public/v1/license/token\nTEST-nonce-license-token-after-redeem\n11111111-1111-4111-8111-111111111111\n2b5e12bc0528d66892a1bcab508752ddb94e206ccf466af65e8b572b68d4f7c5\n23b84d7007f2e9608a1b45800eab32f3fb796d2ecdbda4df58d68eddc5e61eb0",
+   "canonicalUtf8Hex": "5353454e2d5245512d56330a504f53540a2f6170692f7075626c69632f76312f6c6963656e73652f746f6b656e0a544553542d6e6f6e63652d6c6963656e73652d746f6b656e2d61667465722d72656465656d0a31313131313131312d313131312d343131312d383131312d3131313131313131313131310a326235653132626330353238643636383932613162636162353038373532646462393465323036636366343636616636356538623537326236386434663763350a32336238346437303037663265393630386131623435383030656162333266336662373936643265636462646134646635386436386564646335653631656230",
+   "signerPublicKey": "r2AJoT_9JaLBV7WdHJsAYAUzy2R3k5IphcZW8RHFHWs",
+   "headers": {
+    "Authorization": "Bearer TEST-ONLY-account-token-abcdefghijklmnop",
+    "X-Ssen-Reg": "11111111-1111-4111-8111-111111111111",
+    "X-Ssen-Nonce": "TEST-nonce-license-token-after-redeem",
+    "X-Ssen-Signature": "DepNOgw0hRm8YaMhrfXIEOO8i2iNO0oSjOXVSJxAArdD9FVy3i897fGeYWd2myX7n7UpOiNuw8WDfYG8kBhpBA"
+   }
+  }
+ ],
+ "docVersion": "v5.1",
+ "bearerOnlyRequests": [
+  {
+   "name": "edu-reverify",
+   "method": "POST",
+   "pathAndQuery": "/api/public/v1/edu/reverify",
+   "headers": {
+    "Authorization": "Bearer TEST-ONLY-account-token-abcdefghijklmnop",
+    "Content-Type": "application/json"
+   },
+   "rawBody": "{\"code\":\"123456\"}",
+   "rawBodyUtf8Hex": "7b22636f6465223a22313233343536227d",
+   "mustNotSend": [
+    "X-Ssen-Reg",
+    "X-Ssen-Nonce",
+    "X-Ssen-Signature"
+   ],
+   "note": "Bearer 전용. /challenge 호출·서명 계산 없음. 서버는 서명 헤더를 보지 않음."
+  },
+  {
+   "name": "devices-deactivate",
+   "method": "POST",
+   "pathAndQuery": "/api/public/v1/devices/deactivate",
+   "headers": {
+    "Authorization": "Bearer TEST-ONLY-account-token-abcdefghijklmnop",
+    "Content-Type": "application/json"
+   },
+   "rawBody": "{\"regId\":\"11111111-1111-4111-8111-111111111111\"}",
+   "rawBodyUtf8Hex": "7b227265674964223a2231313131313131312d313131312d343131312d383131312d313131313131313131313131227d",
+   "mustNotSend": [
+    "X-Ssen-Reg",
+    "X-Ssen-Nonce",
+    "X-Ssen-Signature"
+   ],
+   "note": "쎈Cut v1.2와 같은 Bearer 전용 요청. 본문 regId가 토큰 계정의 PC여야 함."
+  }
+ ],
+ "trialPolicyCases": {
+  "note": "Server-side behaviour (HTTP-tested on the server, not by the local verifier). No request format change.",
+  "cases": [
+   {
+    "id": "T1",
+    "given": "new email + new PC, POST /trial/start",
+    "expect": {
+     "started": true,
+     "trialEndsAt": "now+90d",
+     "trialStatus": "active"
+    }
+   },
+   {
+    "id": "T2",
+    "given": "same PC (released), different email, POST /trial/start",
+    "expect": {
+     "trialEndsAt": "same as first trial on that PC"
+    }
+   },
+   {
+    "id": "T3",
+    "given": "same email deleted and re-registered within retention",
+    "expect": {
+     "trialEndsAt": "same as first trial of that email"
+    }
+   },
+   {
+    "id": "T4",
+    "given": "account trial active, moves to PC with older trial history, POST /license/token (no /trial/start)",
+    "expect": {
+     "plan": "trial",
+     "ent_exp": "older PC history start + 90d (may be shorter than /status trialEndsAt)"
+    }
+   },
+   {
+    "id": "T5",
+    "given": "account never started trial, POST /license/token",
+    "expect": {
+     "error": "TRIAL_NOT_STARTED",
+     "sideEffect": "trial not started"
+    }
+   },
+   {
+    "id": "T6",
+    "given": "trial history on this PC already ended, POST /trial/start",
+    "expect": {
+     "started": false,
+     "trialStatus": "expired",
+     "trialEndsAt": "past"
+    }
+   },
+   {
+    "id": "T7",
+    "given": "history retention (first trial end + 3 Seoul calendar years) passed",
+    "expect": {
+     "started": true,
+     "trialEndsAt": "now+90d"
+    }
+   }
+  ]
+ }
+}
