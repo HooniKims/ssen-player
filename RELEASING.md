@@ -22,16 +22,16 @@
 
 ```powershell
 .venv/Scripts/python.exe scripts/sign_release.py `
-  --installer artifacts/SsenPlayer-Setup-1.0.0.exe `
-  --url 'https://github.com/HooniKims/ssen-player/releases/download/v1.0.0/SsenPlayer-Setup-1.0.0.exe' `
-  --version 1.0.0 --output artifacts/update.json
+  --installer artifacts/SsenPlayer-Setup-1.0.1.exe `
+  --url 'https://github.com/HooniKims/ssen-player/releases/download/v1.0.1/SsenPlayer-Setup-1.0.1.exe' `
+  --version 1.0.1 --output artifacts/update.json
 ```
 
-2. GitHub 릴리즈 `v1.0.0`에 설치 파일, 포터블 ZIP, `artifacts/update.json`을 함께 올립니다. 파일 이름은 반드시 `update.json`이어야 합니다.
+2. GitHub 릴리즈 `v1.0.1`에 설치 파일, 포터블 ZIP, `artifacts/update.json`을 함께 올립니다. 파일 이름은 반드시 `update.json`이어야 합니다.
 3. 초안이나 시험판이 아닌 정식 릴리즈로 게시합니다. `latest` 주소는 정식 릴리즈만 가리킵니다.
 4. 재생 위치·음량·캡처 폴더는 `HKCU/Software/HooniKim/SsenPlayer`에 저장되므로 업데이트 뒤에도 그대로 남습니다.
 
-**0.2.3 사용자의 직접 업데이트를 지원하려면 위 명령에 `--key "$env:USERPROFILE/.ssen-player/update-signing-key.pem"`을 붙입니다.** 0.2.3은 서명된 `update.json`만 받아들이기 때문에, 서명이 없으면 0.2.3 사용자는 새 버전 알림을 받지 못합니다. 1.0.0도 같은 키로 서명해 호환성을 유지했습니다. 0.2.4 이후 앱은 서명을 확인하지 않고 HTTPS·파일 크기·SHA-256으로 검증합니다.
+**0.2.3 사용자의 직접 업데이트를 지원하려면 위 명령에 `--key "$env:USERPROFILE/.ssen-player/update-signing-key.pem"`을 붙입니다.** 0.2.3은 서명된 `update.json`만 받아들이기 때문에, 서명이 없으면 0.2.3 사용자는 새 버전 알림을 받지 못합니다. 1.0.1도 같은 키로 서명해 호환성을 유지했습니다. 0.2.4 이후 앱은 서명을 확인하지 않고 HTTPS·파일 크기·SHA-256으로 검증합니다.
 
 0.2.2 이하에는 업데이트 주소가 없어서 0.2.3은 한 번 직접 내려받아 설치해야 합니다.
 
