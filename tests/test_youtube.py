@@ -1,9 +1,18 @@
 import unittest
-from app.youtube_url import video_id
+from app.youtube_url import video_id, video_urls
 from app.media_tools import resource
 
 
 class YouTubeTests(unittest.TestCase):
+    def test_batch_order_deduplication_and_validation(self):
+        self.assertEqual(video_urls('https://youtu.be/M7lc1UVf-VE?t=8\n\n'
+                                    'https://youtube.com/shorts/aqz-KE-bpKQ\tM7lc1UVf-VE'), [
+            'https://www.youtube.com/watch?v=M7lc1UVf-VE',
+            'https://www.youtube.com/watch?v=aqz-KE-bpKQ'])
+        for value in ('   ', 'M7lc1UVf-VE\nhttps://example.com/video',
+                      'https://youtube.com/playlist?list=abc'):
+            with self.assertRaises(ValueError): video_urls(value)
+
     def test_urls(self):
         for value in ('M7lc1UVf-VE','https://youtu.be/M7lc1UVf-VE?t=8',
                       'https://www.youtube.com/watch?v=M7lc1UVf-VE&list=x',

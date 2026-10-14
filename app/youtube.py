@@ -155,10 +155,12 @@ class YouTubeSurface(QWidget):
         self.timer.start(250)
         self.state = {}
         self.identifier = ''
+        self.load_generation = 0
         self.last_error = None
         self.sync_tool()
 
     def load(self, identifier):
+        self.load_generation += 1
         self.identifier = video_id(identifier)
         self.state = {}
         self.last_error = None
@@ -167,19 +169,23 @@ class YouTubeSurface(QWidget):
 
     def poll(self):
         if not self.isVisible(): return
-        self.page.runJavaScript('JSON.stringify(window.ssenState || {})', self.received)
+        generation = self.load_generation
+        self.page.runJavaScript('JSON.stringify(window.ssenState || {})',
+                                lambda data: self.received(data, generation))
 
-    def received(self, data):
+    def received(self, data, generation=None):
+        if generation is not None and generation != self.load_generation: return
         try: state = json.loads(data or '{}')
         except (ValueError, TypeError): return
+        if not isinstance(state, dict) or state.get('videoId') != self.identifier: return
         self.state = state
-        self.stateChanged.emit(state)
         error = state.get('error')
         if error and error != self.last_error:
             self.last_error = error
             messages = {100:'삭제되었거나 비공개인 영상입니다.', 101:'이 영상은 앱 안에서 재생하도록 허용되지 않았습니다.',
                         150:'이 영상은 앱 안에서 재생하도록 허용되지 않았습니다.', 153:'YouTube가 임베드 앱 식별을 거부했습니다.'}
             self.message.emit(messages.get(error, f'YouTube 재생 오류: {error}')+' 광고 차단을 끄고 다시 시도할 수 있습니다.')
+        self.stateChanged.emit(state)
 
     def command(self, name, *args):
         self.page.runJavaScript('window.ssenCommand && window.ssenCommand('+json.dumps(name)+','+json.dumps(args)+')')

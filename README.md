@@ -2,7 +2,7 @@
 
 Windows 수업용 영상 플레이어. 로컬 재생에는 광고가 없습니다. MOV를 재생하면서 영상 위에 쓰고, 영상과 필기를 PNG·MP4로 저장합니다. 쎈Lite·쎈Pick의 초록색과 따뜻한 중립색 디자인을 이어갑니다.
 
-현재 버전: **1.1.0**. Windows x64, Python 3.12 / PySide6 6.10.2 / Qt FFmpeg backend. 사용자 PC에는 Python이나 별도 코덱 팩을 설치할 필요가 없습니다.
+현재 버전: **1.2.0**. Windows x64, Python 3.12 / PySide6 6.10.2 / Qt FFmpeg backend. 사용자 PC에는 Python이나 별도 코덱 팩을 설치할 필요가 없습니다.
 
 **[설치 파일 다운로드 및 버전 설명](https://github.com/HooniKims/ssen-player/releases/latest)** · 설치 EXE 또는 압축을 풀어 실행하는 포터블 ZIP을 제공합니다.
 
@@ -12,13 +12,17 @@ Windows 수업용 영상 플레이어. 로컬 재생에는 광고가 없습니�
 
 영상의 한 장면을 설명할 때는 **필기와 캡처**, 설명 과정을 보관할 때는 **수업 녹화**, 같은 부분을 다시 볼 때는 **구간 반복**을 사용합니다. [전체 화면과 저장 결과를 포함한 앱 소개](https://github.com/HooniKims/ssen-player/releases/latest)에서 실제 화면을 확인할 수 있습니다.
 
+## 1.2.0 변경 사항
+
+**재생 목록 → YouTube 링크 추가**에서 여러 링크를 줄바꿈이나 공백으로 구분해 한 번에 추가합니다. 현재 영상은 계속 재생되고, 목록 항목을 두 번 누르면 해당 영상부터 시작합니다. 영상을 끝까지 보면 다음 항목으로 넘어가며 마지막 항목에서 멈춥니다. 로컬 파일과 YouTube 영상을 섞을 수 있고 **위로 / 아래로 / 삭제**로 순서를 정리할 수 있습니다. 한 편 반복·구간 반복 중에는 반복이 우선합니다. 중복 링크는 한 번만 추가하며, 재생 목록은 앱을 닫으면 비워집니다.
+
 ## 1.1.0 변경 사항
 
 쎈 시리즈 디자인·글꼴·아이콘을 통일하고 공통 인증을 연결했습니다. 기본 앱 설정 안내의 `????` 오류도 복원했습니다. [이용권 화면](docs/images/v1.1.0/license-window.png) · [수정된 기본 앱 안내](docs/images/v1.1.0/default-app-korean.png)
 
 ## 사용
 
-1. 설치형 `SsenPlayer-Setup-1.1.0.exe`를 실행하거나, 개발 빌드의 `dist/SsenPlayer/SsenPlayer.exe`를 실행합니다. 실행 파일만 따로 옮기지 말고 `_internal` 폴더도 함께 유지합니다.
+1. 설치형 `SsenPlayer-Setup-1.2.0.exe`를 실행하거나, 개발 빌드의 `dist/SsenPlayer/SsenPlayer.exe`를 실행합니다. 실행 파일만 따로 옮기지 말고 `_internal` 폴더도 함께 유지합니다.
 2. **파일 열기** 또는 드래그 앤 드롭으로 영상을 엽니다. 여러 파일은 재생 목록에 추가됩니다.
 3. 우측의 **펜 / 형광펜 / 지우개**를 선택합니다. 영상이 재생 중이거나 일시 정지된 상태에서 모두 쓸 수 있습니다.
 4. **캡처 저장**을 누르면 현재 영상 프레임 + 표시 중인 자막 + 필기가 1920×1080 PNG로 저장됩니다. 여백에 쓴 필기도 포함하고 도구 모음은 제외합니다.
@@ -93,6 +97,7 @@ powershell -ExecutionPolicy Bypass -File scripts/make_test_media.ps1
 .venv/Scripts/python.exe scripts/smoke_test.py
 .venv/Scripts/python.exe scripts/recording_test.py
 .venv/Scripts/python.exe scripts/web_smoke.py
+.venv/Scripts/python.exe scripts/playlist_smoke.py
 .venv/Scripts/python.exe scripts/youtube_clip_test.py
 .venv/Scripts/python.exe -m PyInstaller --noconfirm --workpath build/output SsenPlayer.spec
 # Inno Setup을 설치한 뒤 설치 파일 생성

@@ -8,7 +8,8 @@ from PySide6.QtCore import Qt, QUrl, QTimer, QSettings, QStandardPaths, Signal, 
 from PySide6.QtGui import QDesktopServices, QShortcut, QKeySequence, QFont
 from PySide6.QtWidgets import (QMainWindow, QWidget, QFrame, QVBoxLayout, QHBoxLayout, QPushButton,
     QLabel, QFileDialog, QSlider, QComboBox, QButtonGroup, QGridLayout, QDialog, QCheckBox,
-    QListWidget, QScrollArea, QSizePolicy, QStackedWidget, QApplication, QProxyStyle, QStyle)
+    QListWidget, QScrollArea, QSizePolicy, QStackedWidget, QApplication, QProxyStyle, QStyle,
+    QPlainTextEdit)
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from .canvas import Canvas
 from .ink import Ink
@@ -174,11 +175,22 @@ class Player(ClassroomFeatures, QMainWindow):
         self.root.addWidget(self.header)
         self.middle = QHBoxLayout()
         self.middle.setSpacing(12)
+        self.queue_panel = QFrame()
+        self.queue_panel.setFixedWidth(250)
+        queue_layout = QVBoxLayout(self.queue_panel)
+        queue_layout.setContentsMargins(0, 0, 0, 0)
+        queue_layout.addWidget(QLabel('재생 목록 · 위에서부터 순서대로'))
+        queue_layout.addWidget(button('YouTube 링크 추가', self.open_youtube_links))
         self.queue_list = QListWidget()
-        self.queue_list.setFixedWidth(235)
         self.queue_list.itemDoubleClicked.connect(lambda item: self.load(self.queue[self.queue_list.row(item)]))
-        self.queue_list.hide()
-        self.middle.addWidget(self.queue_list)
+        queue_layout.addWidget(self.queue_list, 1)
+        queue_actions = QHBoxLayout()
+        queue_actions.addWidget(button('위로', lambda: self.move_queue_item(-1)))
+        queue_actions.addWidget(button('아래로', lambda: self.move_queue_item(1)))
+        queue_actions.addWidget(button('삭제', self.remove_queue_item))
+        queue_layout.addLayout(queue_actions)
+        self.queue_panel.hide()
+        self.middle.addWidget(self.queue_panel)
         self.video_stack = QStackedWidget()
         self.video_stack.addWidget(self.canvas)
         self.middle.addWidget(self.video_stack, 1)
@@ -374,7 +386,74 @@ class Player(ClassroomFeatures, QMainWindow):
         if paths:
             self.load(paths[0])
 
+    def open_youtube_links(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle('YouTube 링크를 재생 목록에 추가')
+        dialog.resize(580, 400)
+        layout = QVBoxLayout(dialog)
+        hint = QLabel('링크를 한 줄에 하나씩 붙여 넣으세요. 공백으로 구분해도 됩니다.\n입력한 순서대로 추가되며, 현재 재생은 계속됩니다.')
+        hint.setWordWrap(True)
+        layout.addWidget(hint)
+        links = QPlainTextEdit()
+        links.setPlaceholderText('https://www.youtube.com/watch?v=…\nhttps://youtu.be/…')
+        layout.addWidget(links)
+        feedback = QLabel('중복 영상은 한 번만 추가합니다. 목록은 앱을 닫으면 비워집니다.')
+        feedback.setWordWrap(True)
+        layout.addWidget(feedback)
+        play = QCheckBox('추가한 첫 영상부터 바로 재생')
+        layout.addWidget(play)
+        def add():
+            try:
+                urls, count = self.add_youtube_links(links.toPlainText())
+            except ValueError as error:
+                feedback.setText(str(error))
+                return
+            dialog.accept()
+            self.notify(f'YouTube 영상 {count}개를 재생 목록에 추가했습니다. 항목을 두 번 누르면 재생합니다.')
+            if play.isChecked(): self.load(urls[0])
+        actions = QHBoxLayout()
+        actions.addWidget(button('취소', dialog.reject))
+        actions.addWidget(button('목록에 추가', add))
+        layout.addLayout(actions)
+        dialog.exec()
+        dialog.deleteLater()
+
+    def add_youtube_links(self, text):
+        from .youtube_url import video_urls, video_id
+        urls = video_urls(text)
+        count = 0
+        for url in urls:
+            if url in self.queue: continue
+            self.queue.append(url)
+            self.queue_list.addItem('YouTube · ' + video_id(url))
+            self.queue_list.item(len(self.queue)-1).setToolTip(url)
+            count += 1
+        self.queue_panel.show()
+        return urls, count
+
+    def move_queue_item(self, delta):
+        row = self.queue_list.currentRow()
+        target = row + delta
+        if not 0 <= row < len(self.queue) or not 0 <= target < len(self.queue): return
+        self.queue.insert(target, self.queue.pop(row))
+        item = self.queue_list.takeItem(row)
+        self.queue_list.insertItem(target, item)
+        self.queue_list.setCurrentRow(target)
+
+    def remove_queue_item(self):
+        row = self.queue_list.currentRow()
+        if not 0 <= row < len(self.queue): return
+        # Keep the playing item as the anchor for automatic next/previous.
+        if self.queue[row] == self.current:
+            self.notify('재생 중인 항목입니다. 다른 영상을 연 뒤 삭제해 주세요.')
+            return
+        self.queue.pop(row)
+        self.queue_list.takeItem(row)
+
     def load(self, path):
+        if path.startswith(('https://', 'http://')):
+            self.load_youtube(path, self.settings.value('youtube_blocking', True, type=bool))
+            return
         if not Path(path).is_file():
             self.notify('파일을 찾을 수 없습니다: ' + path)
             return
@@ -530,7 +609,7 @@ class Player(ClassroomFeatures, QMainWindow):
         self.load(self.queue[index % len(self.queue)])
 
     def toggle_queue(self):
-        self.queue_list.setVisible(not self.queue_list.isVisible())
+        self.queue_panel.setVisible(not self.queue_panel.isVisible())
 
     def choose_tool(self, name):
         if name != 'pointer' and not self.require_edit():
@@ -632,7 +711,7 @@ class Player(ClassroomFeatures, QMainWindow):
         self.footer.setVisible(mode != 'pure')
         self.tools_scroll.setVisible(mode != 'pure')
         self.status.setVisible(mode != 'pure')
-        self.queue_list.hide()
+        self.queue_panel.hide()
         self.window_button.setVisible(mode == 'classroom')
         self.full_button.setText('완전 화면' if mode == 'classroom' else '전체 화면')
         margin = 0 if mode == 'pure' else 12

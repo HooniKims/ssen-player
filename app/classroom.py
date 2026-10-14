@@ -90,13 +90,19 @@ class ClassroomFeatures:
             self.video_stack.addWidget(self.youtube)
         self.source_kind = 'youtube'
         self.youtube_initialized = False
+        self.youtube_end_handled = False
         self.current = 'https://www.youtube.com/watch?v='+identifier
+        if self.current not in self.queue:
+            self.add_youtube_links(self.current)
+        self.queue_list.setCurrentRow(self.queue.index(self.current))
         self.canvas.ink = self.inks.get(self.current, Ink())
         self.canvas.subtitle = ''
         self.canvas.loaded = True
         self.a = self.b = None
         self.ab_button.setText('여기부터')
         self.filename.setText('YouTube · '+identifier)
+        self.filename.setToolTip(self.current)
+        self.setWindowTitle('YouTube · '+identifier+' · 쎈Player')
         self.video_stack.setCurrentWidget(self.youtube)
         if self.youtube.blocker.enabled != blocking: self.youtube.set_blocking(blocking)
         self.youtube.load(identifier)
@@ -105,6 +111,7 @@ class ClassroomFeatures:
 
     def youtube_state(self, state):
         if self.source_kind != 'youtube': return
+        if state.get('videoId') != self.youtube.identifier: return
         if state.get('ready') and not self.youtube_initialized:
             self.youtube_initialized = True
             self.youtube.command('volume', round(self.audio.volume()*100))
@@ -120,9 +127,22 @@ class ClassroomFeatures:
         if state.get('title'):
             self.filename.setText(state['title'])
             self.filename.setToolTip(state['title'])
-        if self.loop and state.get('state') == 0:
-            self.youtube.command('seek',0)
-            self.youtube.command('play')
+            self.setWindowTitle(state['title']+' · 쎈Player')
+            if self.current in self.queue:
+                self.queue_list.item(self.queue.index(self.current)).setText('YouTube · '+state['title'])
+        ended = state.get('ready') and not state.get('error') and state.get('state') == 0
+        if state.get('state') == 1:
+            self.youtube_end_handled = False
+        if ended and not self.youtube_end_handled:
+            self.youtube_end_handled = True
+            if self.a is not None and self.b is not None:
+                self.youtube.command('seek', self.a/1000)
+                self.youtube.command('play')
+            elif self.loop:
+                self.youtube.command('seek',0)
+                self.youtube.command('play')
+            else:
+                self.next_file(1, wrap=False)
 
     def apply_loop(self, start, end):
         if not 0 <= start < end or end-start < 500:

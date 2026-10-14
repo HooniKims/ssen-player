@@ -3,6 +3,22 @@ import re
 from urllib.parse import urlparse, parse_qs
 
 
+def video_urls(text):
+    """Validate the whole batch before adding anything; keep pasted order."""
+    values = text.split()
+    if not values:
+        raise ValueError('YouTube 영상 링크를 하나 이상 입력해 주세요.')
+    urls = []
+    for index, value in enumerate(values, 1):
+        try:
+            url = 'https://www.youtube.com/watch?v=' + video_id(value)
+        except ValueError as error:
+            raise ValueError(f'{index}번째 링크를 확인해 주세요: {value}') from error
+        if url not in urls:
+            urls.append(url)
+    return urls
+
+
 def video_id(value):
     value = value.strip()
     if re.fullmatch(r'[A-Za-z0-9_-]{11}', value): return value
