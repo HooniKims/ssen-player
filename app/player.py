@@ -376,15 +376,28 @@ class Player(ClassroomFeatures, QMainWindow):
         if paths:
             self.add_files(paths)
 
-    def add_files(self, paths):
+    def add_files(self, paths, *, enqueue=False):
         paths = [str(Path(p).resolve()) for p in paths if Path(p).is_file()]
         for path in paths:
             if path not in self.queue:
                 self.queue.append(path)
                 self.queue_list.addItem(Path(path).name)
                 self.queue_list.item(len(self.queue)-1).setToolTip(path)
-        if paths:
+        if paths and (not enqueue or self.current is None):
             self.load(paths[0])
+
+    def receive_files(self, paths):
+        """Handle Explorer opens without interrupting the current video."""
+        before = len(self.queue)
+        self.add_files(paths, enqueue=True)
+        if paths:
+            self.queue_panel.show()
+            self.notify(f'영상 {len(self.queue) - before}개를 재생 목록에 추가했습니다.')
+        if self.isMinimized():
+            self.setWindowState(self.windowState() & ~Qt.WindowMinimized)
+        self.show()
+        self.raise_()
+        self.activateWindow()
 
     def open_youtube_links(self):
         dialog = QDialog(self)

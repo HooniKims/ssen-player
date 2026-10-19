@@ -13,12 +13,30 @@ def main():
     from PySide6.QtWidgets import QApplication
     from PySide6.QtCore import Qt
     from PySide6.QtGui import QFontDatabase, QIcon
-    from app.player import Player
-    from app.style import STYLE
     QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
     application = QApplication(sys.argv)
     application.setApplicationName('SsenPlayer')
     application.setOrganizationName('HooniKim')
+    args = list(sys.argv[1:])
+    # Diagnostic runs remain isolated from the user's interactive player.
+    diagnostic_flags = ('--auth-test-output', '--feature-test-output', '--smoke-test-output')
+    instance = None
+    pending = []
+    if not any(flag in args for flag in diagnostic_flags):
+        from app.single_instance import SingleInstance
+        from PySide6.QtWidgets import QMessageBox
+        instance = SingleInstance(application)
+        instance.files_received.connect(pending.append)
+        paths = [str(Path(p).resolve()) for p in args if not p.startswith('--') and Path(p).is_file()]
+        try:
+            if not instance.start(paths):
+                return 0
+        except RuntimeError as error:
+            QMessageBox.warning(None, '쎈플레이어', str(error))
+            return 1
+        application.aboutToQuit.connect(instance.close)
+    from app.player import Player
+    from app.style import STYLE
     base = Path(getattr(sys, '_MEIPASS', Path(__file__).parent))
     from app.theme import load_fonts
     load_fonts()
@@ -27,7 +45,6 @@ def main():
     application.setWindowIcon(app_icon)
     application.setStyle('Fusion')
     application.setStyleSheet(STYLE)
-    args = list(sys.argv[1:])
     auth_diagnostics = None
     if '--auth-test-output' in args:
         index = args.index('--auth-test-output')
@@ -51,6 +68,11 @@ def main():
         del args[index:index+2]
     paths = [p for p in args if not p.startswith('--') and Path(p).is_file()]
     if paths: window.add_files(paths)
+    if instance:
+        instance.files_received.disconnect(pending.append)
+        instance.files_received.connect(window.receive_files)
+        for received in pending:
+            window.receive_files(received)
     if diagnostics:
         from app.diagnostics import run
         run(application, window, Path(diagnostics), STARTED)

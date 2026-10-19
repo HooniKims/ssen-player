@@ -139,5 +139,32 @@ class PlaylistTests(unittest.TestCase):
         YouTubeSurface.received(surface, json.dumps(dict(videoId='M7lc1UVf-VE', state=0)), 2)
         self.assertEqual(surface.state, {})
 
+    def test_external_files_append_without_reloading_current_video(self):
+        w = self.window
+        files = [Path(self.temp.name) / name for name in ('첫 영상.mp4', '다음 영상.mp4')]
+        for file in files: file.touch()
+        with patch.object(w.media, 'play'):
+            w.add_files([str(files[0])])
+        with patch.object(w, 'load') as load:
+            w.receive_files([str(files[1]), str(files[0])])
+            w.receive_files([])
+            load.assert_not_called()
+        self.assertEqual(w.current, str(files[0].resolve()))
+        self.assertEqual(w.queue, self.urls + [str(p.resolve()) for p in files])
+        self.assertEqual(w.queue_list.count(), 4)
+
+    def test_external_file_starts_in_empty_player_and_preserves_youtube(self):
+        w = self.window
+        local = Path(self.temp.name) / '영상.mp4'
+        local.touch()
+        with patch.object(w.media, 'play'):
+            w.receive_files([str(local)])
+        self.assertEqual(w.current, str(local.resolve()))
+        w.load(self.urls[0])
+        with patch.object(w, 'load') as load:
+            w.receive_files([str(local)])
+            load.assert_not_called()
+        self.assertEqual(w.current, self.urls[0])
+
 
 if __name__ == '__main__': unittest.main()
