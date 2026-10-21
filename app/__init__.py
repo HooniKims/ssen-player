@@ -1,1 +1,2 @@
-VERSION = '1.2.1'
+APP_NAME = '쎈Player'
+VERSION = '1.3.0'

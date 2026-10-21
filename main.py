@@ -84,11 +84,8 @@ def main():
         run_auth(application, window, auth_diagnostics)
     if not diagnostics and not features and not auth_diagnostics:
         from PySide6.QtCore import QTimer
-        def check_update():
-            window.offer_default_app()
-            from app.updater import check_in_background
-            check_in_background(window)
-        QTimer.singleShot(3000, check_update)
+        window.updates.start()
+        QTimer.singleShot(3000, window.offer_default_app)
     return application.exec()
 
 if __name__ == '__main__':

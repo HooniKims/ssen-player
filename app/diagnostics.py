@@ -54,9 +54,8 @@ def run(application, window, output, started):
             dialog.accept()
         QTimer.singleShot(200, inspect_terms)
         window.show_settings()
-        from .updater import UpdateDialog
-        update = UpdateDialog(window)
-        update.show()
+        window.check_update()
+        update = window.update_ui.dialog
         QApplication.processEvents()
         panel = update.findChild(LegalPanel)
         update.grab().save(str(output/'update-copyright.png'))

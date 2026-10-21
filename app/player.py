@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (QMainWindow, QWidget, QFrame, QVBoxLayout, QHBoxL
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from .canvas import Canvas
 from .ink import Ink
-from .subtitles import read_subtitles
+from .subtitles import read_subtitles, find_subtitle, SUBTITLE_EXTENSIONS
 from . import VERSION
 from .classroom import ClassroomFeatures, SPEEDS
 from .controls import button, icon_only
@@ -85,6 +85,7 @@ class Player(ClassroomFeatures, QMainWindow):
         self.inks = {}
         self.subtitles = []
         self.subtitle_delay = 0
+        self.subtitle_files = {}
         self.a = self.b = None
         self.loop = False
         self.pending_resume = 0
@@ -105,7 +106,7 @@ class Player(ClassroomFeatures, QMainWindow):
         self.media.errorOccurred.connect(lambda _, message: self.notify('재생 오류: ' + message))
         self.media.mediaStatusChanged.connect(self.media_status)
         self.canvas.video.videoSink().subtitleTextChanged.connect(self.embedded_subtitle)
-        for key, action in [('Space', self.toggle), ('Ctrl+O', self.open_files), ('F11', self.cycle_fullscreen),
+        for key, action in [('Space', self.toggle), ('Ctrl+O', self.open_files), ('Ctrl+Shift+O', self.open_subtitle), ('F11', self.cycle_fullscreen),
                             ('Escape', self.escape), ('Ctrl+S', self.capture), ('Ctrl+Z', self.undo),
                             ('Ctrl+Y', self.redo), ('Right', lambda: self.jump(5000)),
                             ('Left', lambda: self.jump(-5000)), ('P', lambda: self.choose_tool('pen')),
@@ -115,6 +116,10 @@ class Player(ClassroomFeatures, QMainWindow):
         self.save_timer.timeout.connect(self.save_position)
         self.save_timer.start(10000)
         self.setAcceptDrops(True)
+        self.file_drop_targets = (self.canvas.viewport(), self.queue_list.viewport())
+        for viewport in self.file_drop_targets:
+            viewport.setAcceptDrops(True)
+            viewport.installEventFilter(self)
         from .auth import AuthController
         self.auth = (auth_factory or AuthController)(self)
         QApplication.instance().auth_controller = self.auth
@@ -126,6 +131,12 @@ class Player(ClassroomFeatures, QMainWindow):
         self.auth_notice.setWordWrap(True)
         self.root.insertWidget(1, self.auth_notice)
         QApplication.instance().aboutToQuit.connect(self.auth.shutdown)
+        from .updater import UpdateController
+        from .update_ui import UpdateUI
+        self.updates = UpdateController(self, settings=self.settings._settings,
+                                        busy_reason=self.update_busy_reason)
+        self.update_ui = UpdateUI(self, self.updates)
+        QApplication.instance().aboutToQuit.connect(self.updates.shutdown)
 
     def require_edit(self):
         from .auth_gate import authorized
@@ -165,11 +176,14 @@ class Player(ClassroomFeatures, QMainWindow):
         logo.setFixedSize(160, 34)
         logo.setAccessibleName('쎈Player')
         row.addWidget(logo)
-        row.addWidget(QLabel(VERSION, objectName='muted'))
+        from .update_ui import VersionButton
+        self.version_button = VersionButton(self.check_update)
+        row.addWidget(self.version_button)
         self.filename = QLabel('수업에 집중하는 영상 플레이어', objectName='muted')
         self.filename.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
         row.addWidget(self.filename, 1)
         row.addWidget(button('파일 열기', self.open_files, None, 'Ctrl+O · 여러 영상 선택'))
+        row.addWidget(button('자막', self.open_subtitle, None, 'Ctrl+Shift+O · 자막 파일을 영상 위에 끌어 놓아도 적용됩니다'))
         row.addWidget(button('재생 목록', self.toggle_queue))
         row.addWidget(button('설정', self.show_settings))
         self.root.addWidget(self.header)
@@ -378,6 +392,8 @@ class Player(ClassroomFeatures, QMainWindow):
 
     def add_files(self, paths, *, enqueue=False):
         paths = [str(Path(p).resolve()) for p in paths if Path(p).is_file()]
+        subtitles = [p for p in paths if Path(p).suffix.lower() in SUBTITLE_EXTENSIONS]
+        paths = [p for p in paths if Path(p).suffix.lower() not in SUBTITLE_EXTENSIONS]
         for path in paths:
             if path not in self.queue:
                 self.queue.append(path)
@@ -385,12 +401,13 @@ class Player(ClassroomFeatures, QMainWindow):
                 self.queue_list.item(len(self.queue)-1).setToolTip(path)
         if paths and (not enqueue or self.current is None):
             self.load(paths[0])
+        self.attach_subtitles(subtitles, paths)
 
     def receive_files(self, paths):
         """Handle Explorer opens without interrupting the current video."""
         before = len(self.queue)
         self.add_files(paths, enqueue=True)
-        if paths:
+        if any(Path(p).suffix.lower() not in SUBTITLE_EXTENSIONS for p in paths):
             self.queue_panel.show()
             self.notify(f'영상 {len(self.queue) - before}개를 재생 목록에 추가했습니다.')
         if self.isMinimized():
@@ -498,12 +515,9 @@ class Player(ClassroomFeatures, QMainWindow):
         # Speed may have changed while YouTube was playing; an unchanged source emits no durationChanged.
         self.media.setPlaybackRate(SPEEDS[self.speed.currentIndex()])
         self.seek.setRange(0, max(1, self.media.duration()))
-        for suffix in ('.srt', '.smi', '.vtt'):
-            sub = Path(path).with_suffix(suffix)
-            if sub.is_file():
-                try: self.subtitles = read_subtitles(sub)
-                except ValueError as error: self.notify(str(error))
-                break
+        sub = self.subtitle_files.get(path) or find_subtitle(path)
+        if sub:
+            self.apply_subtitle(sub)
         self.media.play()
         self.notify('영상을 여는 중입니다…')
 
@@ -755,6 +769,14 @@ class Player(ClassroomFeatures, QMainWindow):
         self.exit_timer.start(2500)
 
     def eventFilter(self, obj, event):
+        if obj in self.file_drop_targets:
+            if event.type() in (QEvent.DragEnter, QEvent.DragMove):
+                if any(url.isLocalFile() for url in event.mimeData().urls()):
+                    event.acceptProposedAction()
+                    return True
+            elif event.type() == QEvent.Drop and event.mimeData().hasUrls():
+                self.dropEvent(event)
+                return True
         if self.mode == 'pure' and event.type() in (QEvent.MouseMove, QEvent.MouseButtonPress, QEvent.TouchBegin, QEvent.TabletPress):
             self.reveal_exit()
         return super().eventFilter(obj, event)
@@ -851,7 +873,10 @@ class Player(ClassroomFeatures, QMainWindow):
         delay.addWidget(button('+0.5초', lambda: self.shift_subtitle(500)))
         layout.addLayout(delay)
         layout.addWidget(QLabel(f'쎈Player {VERSION} · HooniKim'))
-        layout.addWidget(button('업데이트 확인', self.check_update))
+        def updates():
+            dialog.accept()
+            self.check_update()
+        layout.addWidget(button('업데이트 안내', updates))
         layout.addWidget(QLabel('F11  수업 / 완전 화면 전환    Esc  이전 화면\nCtrl+S  영상 + 필기 캡처    Ctrl+Z  필기 되돌리기', objectName='muted'))
         from .legal import LegalPanel
         layout.addWidget(LegalPanel())
@@ -870,30 +895,64 @@ class Player(ClassroomFeatures, QMainWindow):
         self.notify(f'외부 자막 싱크 {self.subtitle_delay/1000:+.1f}초')
 
     def open_subtitle(self):
+        if not self.current or self.source_kind != 'local':
+            self.notify('자막을 적용할 동영상 파일을 먼저 열어 주세요.')
+            return
         path, _ = QFileDialog.getOpenFileName(self, '자막 열기', '', '자막 (*.srt *.smi *.sami *.vtt)')
         if path:
-            try:
-                self.subtitles = read_subtitles(path)
-                self.media.setActiveSubtitleTrack(-1)
-                self.position(self.media.position())
-                self.notify('자막을 불러왔습니다: ' + Path(path).name)
-            except Exception as error: self.notify(str(error))
+            self.apply_subtitle(path)
 
-    def update_checked(self, payload, error):
-        self.update_task = None
-        if error or not payload: return  # Offline or nothing new: stay silent at startup.
-        if self.mode != 'window' or self.recorder.active or self.recorder.finalizing:
-            self.notify(f"새 버전 {payload['version']}이 나왔습니다. 설정 → 업데이트 확인에서 설치할 수 있습니다.")
-            return
-        from .updater import UpdateDialog
-        UpdateDialog(self, payload).exec()
+    def apply_subtitle(self, path, target=None):
+        target = target or (self.current if self.source_kind == 'local' else None)
+        if not target:
+            self.notify('자막을 적용할 동영상 파일을 먼저 열어 주세요.')
+            return False
+        try:
+            cues = read_subtitles(path)
+        except (OSError, ValueError) as error:
+            self.notify('자막을 불러오지 못했습니다: ' + str(error))
+            return False
+        self.subtitle_files[target] = str(Path(path).resolve())
+        if target == self.current and self.source_kind == 'local':
+            self.subtitles = cues
+            self.subtitle_delay = 0
+            self.canvas.subtitle_visible = True
+            self.media.setActiveSubtitleTrack(-1)
+            self.position(self.media.position())
+            self.canvas.viewport().update()
+        self.notify('자막을 연결했습니다: ' + Path(path).name)
+        return True
+
+    def attach_subtitles(self, subtitles, videos):
+        for path in subtitles:
+            if not videos:
+                if len(subtitles) == 1:
+                    self.apply_subtitle(path)
+                else:
+                    self.notify('현재 영상에 적용할 자막 파일 하나만 끌어 놓아 주세요.')
+                continue
+            matches = [p for p in videos if Path(p).stem.casefold() == Path(path).stem.casefold()]
+            if len(matches) == 1:
+                self.apply_subtitle(path, matches[0])
+            elif len(videos) == 1 and len(subtitles) == 1:
+                self.apply_subtitle(path, videos[0])
+            else:
+                self.notify('영상과 이름이 같은 자막을 함께 열거나, 재생할 영상에 자막 하나를 끌어 놓아 주세요.')
 
     def check_update(self):
-        from .updater import UpdateDialog
-        UpdateDialog(self).exec()
+        self.update_ui.show_details()
+
+    def update_busy_reason(self):
+        if self.recorder.active or self.recorder.finalizing:
+            return '녹화와 파일 저장이 끝난 뒤 설치해 주세요.'
+        if self.jobs or any(getattr(dialog, 'busy', False) for dialog in self.findChildren(QDialog)):
+            return '진행 중인 캡처·변환·저장 작업이 끝난 뒤 설치해 주세요.'
+        if self.canvas.drawing:
+            return '필기를 마친 뒤 설치해 주세요.'
+        return ''
 
     def dragEnterEvent(self, event):
-        if event.mimeData().hasUrls(): event.acceptProposedAction()
+        if any(url.isLocalFile() for url in event.mimeData().urls()): event.acceptProposedAction()
 
     def dropEvent(self, event):
         self.add_files([url.toLocalFile() for url in event.mimeData().urls() if url.isLocalFile()])
@@ -907,6 +966,7 @@ class Player(ClassroomFeatures, QMainWindow):
             event.ignore()
             return
         if self.segment_dialog: self.segment_dialog.close()
+        self.updates.shutdown()
         if self.youtube: self.youtube.shutdown()
         self.save_position()
         self.settings.setValue('volume', self.audio.volume())

@@ -14,7 +14,13 @@
 
 ## GitHub 릴리즈 업데이트
 
-앱은 실행 3초 뒤 `build/update.json`의 `feed_url`, 곧 `https://github.com/HooniKims/ssen-player/releases/latest/download/update.json`을 확인합니다. 새 버전이 있으면 "지금 업데이트 / 다음에"를 묻고, "다음에"를 고르면 다음 실행 때 다시 묻습니다. 수업 전체 화면이나 녹화 중에는 창을 띄우지 않고 상태 줄에만 알립니다. 인터넷이 없거나 확인에 실패하면 아무것도 표시하지 않습니다.
+앱은 정상 시작 경로에서 `UpdateController.start()`를 한 번 호출합니다. 기본 첫 확인은 15초 뒤, 반복은 4시간입니다. 자동 확인을 꺼도 수동 확인은 가능합니다. `HKCU/Software/HooniKim/SsenPlayer/updates`에 자동 확인·건너뛴 버전·마지막 확인 시각을 저장하고, 저장 오류를 UI에 표시합니다. 같은 실행에서 닫은 버전·상태는 다시 알리지 않습니다.
+
+`build/update.json`의 공식 feed에서 검증한 버전과 동일한 GitHub 정식 릴리스 API를 조회해 설명과 설치/ZIP 전체 크기를 가져옵니다. 설명은 길이가 제한된 일반 텍스트입니다. 네트워크 오류는 오류로 표시하며 이미 확인된 새 버전을 유지합니다. 버전 버튼·민트색 카드·상세창은 하나의 컨트롤러를 공유합니다.
+
+설치형은 현재 EXE 경로가 기존 Inno Setup 등록 경로이고 제거 프로그램이 있는 경우만 인정합니다. 사용자가 누르면 다운로드하고 크기·SHA-256을 검증합니다. 완료 후 별도 저장 확인과 명시적 설치 선택이 필요하며, 녹화·변환·저장·필기 중에는 설치를 막습니다. 설치 직전 파일을 재검증하고 Inno Setup의 `/RESTARTPLAYER=1`로 성공 후 앱을 다시 엽니다. OS 재부팅과 Restart Manager의 중복 재시작은 금지합니다. 포터블/개발 실행은 공식 릴리스 페이지를 열고 ZIP을 수동 교체하며 설치 엔진은 호출하지 않습니다.
+
+업데이트 UI 검증: `python scripts/update_smoke.py`는 격리 설정·가짜 릴리스·가짜 다운로드로 실제 Qt 화면을 캡처합니다. 설치는 실행하지 않습니다. `python scripts/startup_update_smoke.py`는 정상 main 시작 경로의 타이머 등록을 확인합니다. `python scripts/subtitle_smoke.py`는 실제 MOV를 재생하며 자막 드롭과 화면 모드를 확인합니다. 실제 공개 파일 다운로드 검사는 별도로 기록합니다.
 
 다른 쎈 앱의 `latest.yml`처럼, 릴리즈에 함께 올린 `update.json`이 새 버전 번호와 설치 파일의 크기·SHA-256을 알려 줍니다. 앱은 GitHub에 HTTPS로 접속해 이 파일을 받고, 설치 파일 주소가 이 저장소의 릴리즈 파일인지 확인합니다. 내려받은 설치 파일의 크기와 SHA-256이 맞을 때만 설치합니다. 앱에는 GitHub 토큰을 넣지 않습니다.
 

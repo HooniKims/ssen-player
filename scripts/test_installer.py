@@ -3,13 +3,14 @@ import json
 import argparse
 import subprocess
 import winreg
+import re
 from pathlib import Path
 
 root = Path(__file__).resolve().parent.parent
 parser = argparse.ArgumentParser()
 parser.add_argument('--media', nargs='*', help='Selected regression samples; omit for all formats')
 args = parser.parse_args()
-version = (root/'app/__init__.py').read_text('utf-8').split("'")[1]
+version = re.search(r"VERSION\s*=\s*'([^']+)'", (root/'app/__init__.py').read_text('utf-8'))[1]
 target = (root/'.tools/install-smoke').resolve()
 if root not in target.parents or target.name != 'install-smoke':
     raise RuntimeError('Unsafe installation test directory')
