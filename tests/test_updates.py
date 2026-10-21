@@ -166,9 +166,18 @@ class UpdateTests(unittest.TestCase):
         self.c.check()
         self.assertEqual(self.c.phase, 'error')
         self.c.set_auto_check(False)
-        self.assertEqual(self.c.phase, 'idle')
+        self.assertEqual(self.c.phase, 'error')
         c2 = self.controller()
         self.assertEqual(c2.phase, 'idle')
+
+    def test_preferences_cannot_turn_failed_recheck_into_latest(self):
+        self.fetcher.return_value = release(VERSION)
+        self.c.check()
+        self.fetcher.side_effect = OSError('offline')
+        self.c.check()
+        self.c.set_auto_check(False)
+        self.assertEqual(self.c.phase, 'error')
+        self.assertIn('offline', self.c.error)
 
     def test_preferences_failure_preserves_value_and_is_visible(self):
         self.c.start()

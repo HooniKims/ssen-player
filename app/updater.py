@@ -286,8 +286,7 @@ class UpdateController(QObject):
         self.first_timer.stop()
         self.repeat_timer.stop()
         if self.auto_check and self._started: self.first_timer.start()
-        self.error = ''
-        self._resting_phase()
+        self._preferences_saved()
         self.changed.emit()
         return True
 
@@ -295,10 +294,15 @@ class UpdateController(QObject):
         if not self.has_update: return False
         version = self.payload['version']
         if not self._save('skipped_version', version): return False
-        self.skipped, self.error = version, ''
-        self._resting_phase()
+        self.skipped = version
+        self._preferences_saved()
         self.changed.emit()
         return True
+
+    def _preferences_saved(self):
+        # Changing a preference is not a successful network/download result.
+        if self.error.startswith('설정 저장 실패:'): self.error = ''
+        if not self.error: self._resting_phase()
 
     def dismiss(self):
         if self.notice_key: self.dismissed.add(self.notice_key)
